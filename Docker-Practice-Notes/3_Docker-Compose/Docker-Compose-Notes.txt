@@ -1,0 +1,41 @@
+Docker Compose-->>
+
+1.1--> create a docker-compose.yaml file, its for managing multiple applications having mutiple techstack example one is made up with springboot
+       another is made of react and so on and this docker-compose file will manage all the running instance/contaniner inside its new container here 
+	   named app1-hello under this container hello-spring contaniner will be there react-app contanier will be there and it will manage networking/communications as well.
+
+1.2--> docker-compose.yaml
+
+        services:
+		  hello-spring:
+			build: ./hello-spring       ---->>> giving the path where dockerfile exists
+			ports:
+			  - "8080:8080"             ---->>> port mapping
+			environment:
+			  - ENV_VALUE=hello-env-docker-compose     ---->>>setting env values
+			  
+		
+		--> now we need to do just run below command
+		
+		docker compose up
+		--> it will create all the images for mentioned services in the docker-compose only if the the image has not been already existed
+		    means, if the some of the images has been already build it will use that not create new one's.
+	    --> it will up all the containers mentioned in the docker-compose only if the contanier is not in running state
+		    means, if the some of the conatainers are already running it will use that not create new one's.
+		--> if there is any changes in particular service->dockerfile or something, then as well it will create new image
+		
+		-->output at http://localhost:8080/ 
+		            {
+					  "container": "609896037faf",
+					  "env": "hello-env-docker-compose",
+					  "message": "Hello from Simple App (Spring Boot)"
+					}
+					
+1.3--> docker compose up --build
+       --> it will build new images for all the mentioned services under docker-compose file does'nt matter the image for particular service already exist or not
+		
+1.4--> docker compose down
+       --> it will stop all the container in compose file as well as networking between them
+	   
+	   
+1.5--> 
