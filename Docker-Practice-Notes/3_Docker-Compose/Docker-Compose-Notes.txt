@@ -8,7 +8,7 @@ Docker Compose-->>
 
         services:
 		  hello-spring:
-			build: ./hello-spring       ---->>> giving the path where dockerfile exists
+			build: ./hello-spring       ---->>> giving the path where dockerfile exists for building the image
 			ports:
 			  - "8080:8080"             ---->>> port mapping
 			environment:
@@ -38,4 +38,75 @@ Docker Compose-->>
        --> it will stop all the container in compose file as well as networking between them
 	   
 	   
-1.5--> 
+1.5--> docker compose up -do
+       --> it will up the containers in detach mode
+	   
+1.6--> docker compose ps
+       --> it will show all running images/ conatainers services running
+	   
+	   
+Debugging & View logs -->>
+
+	   
+1.7--> docker compose logs
+       --> it will show all the logs generated via all the images and containers
+	   
+1.8--> docker compose logs serviceName
+       docker compose logs hello-spring
+	   --> it will show the latest logs
+	   
+1.9--> docker compose logs -f hello-spring
+       --> it will show the LIVE logs
+       
+	   
+	   
+	   
+	   
+	   
+1.10--> docker compose exec hello-spring sh
+        --> you are logged in this container so you can check everthing under the container like env variable and all
+		
+1.11--> docker images
+        --> it will show all the images
+		
+1.12--> docker login
+        --> login to your dockerhub account
+		
+1.13--> docker push mishalpandey/hello-spring:1.0
+        --> it will push the image on remote account of dockerhub
+		
+		
+		
+1.14--> docker-compose.yaml with build
+
+			services:
+			  hello-spring:
+				build: ./hello-spring
+				image: mishalpandey/hello-spring:1.0
+				ports:
+				  - "8080:8080"
+				environment:
+				  - ENV_VALUE=${ENV_VALUE}
+				  
+				  
+			
+            -->> it will build the the image and the path you have givem from there it will check dockerfile
+            -->> and create the image with naming with tag like mishalpandey/hello-spring:1.0, without image given it create create default name from the file name and latest tag		
+				  
+				  
+1.15--> docker-copose.yaml without build
+
+			services:
+			  hello-spring:
+				image: mishalpandey/hello-spring:1.0
+				ports:
+				  - "8080:8080"
+				environment:
+				  - ENV_VALUE=${ENV_VALUE}
+				  
+			-->> without build, it will pull the image from remote direction given mishalpandey/hello-spring:1.0 and up the container means run it
+				  
+		
+		
+	   
+	   

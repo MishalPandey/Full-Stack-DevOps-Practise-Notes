@@ -1,0 +1,42 @@
+Docker Network-->>
+
+	First Service: nginx
+	Second Service: postgres
+
+	establish commnunication between them-->>
+
+
+
+BEFORE NETWORK ESTABLISHMENT
+
+1.1--> docker run -d --name app nginx
+       --> it will pull the nginx image from remote dockerhub in detach mode and up its container named as app
+	   
+1.2--> docker run -d --name db -e POSTGRES_PASSWORD=mysecretpassword postgres
+       --> it will pull the postgres image from remote dockerhub in detach mode and up its container named as db
+
+1.3--> docker exec -it app sh
+       --> we have gone under app container terminal
+#curl http://db:5432
+
+SHOWING- curl: (6) Could not resolve host: db
+
+
+
+
+AFTER NETWORK ESTABLISHMENT
+
+1.1--> docker network create my-network
+       --> it will create a network named my-network
+
+1.2--> docker run -d --name app --network my-network nginx
+       --> now pulling image of nginx will use this my-network and up the container
+
+1.3--> docker run --name db --network my-network -e POSTGRES_PASSWORD=mysecretpassword -d -p 5432:5432 postgres
+       --> now pulling image of db will use this my-network and up the container 
+
+1.4--> docker exec -it app sh
+#curl http://db:5432
+
+SHOWING- curl: (52) Empty reply from server
+ABLE TO COMMUNICATE
