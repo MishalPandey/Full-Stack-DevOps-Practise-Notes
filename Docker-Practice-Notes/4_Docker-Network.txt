@@ -40,3 +40,16 @@ AFTER NETWORK ESTABLISHMENT
 
 SHOWING- curl: (52) Empty reply from server
 ABLE TO COMMUNICATE
+
+
+1.1--> docker network ls
+       --> it will show all the network and its type used by your containers, with containers name 
+	   
+
+1.2--> docker network create my-network
+   --> docker network ls
+       --> it will create my-network with type of bridge(it is default network type if not mentioned then it will create bridge network)   
+	   
+	   
+TYPE OF NETWORK- bridge, host , none READ ABOUT IT MORE-------------------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+	   
