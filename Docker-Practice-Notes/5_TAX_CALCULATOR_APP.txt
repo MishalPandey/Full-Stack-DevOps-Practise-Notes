@@ -205,4 +205,229 @@ With Docker Compose File-->>
 			EXPOSE 3000
 			CMD ["node", "index.js"]
 			
-		DockerFile ------->>>>>> it is MULTI STAGE
+		DockerFile ------->>>>>> it is MULTI STAGE, when frontendApp will be in used with service-a, service-b
+			
+			FROM node:24-slim AS build                     --->>>FIRST STAGE 
+			WORKDIR /app
+			COPY package*.json ./
+			RUN npm install
+			COPY . .
+			RUN npm run build                     --->>>build to run the application
+
+			FROM nginx:alpine                     --->>>SECOND STAGE- server manager(nginx)
+			COPY --from=build /app/dist /usr/share/nginx/html         --->>>whatever has been build from 1st stage will be copied at location /app/dist, nginx servered location /usr/share/nginx/html
+
+
+			EXPOSE 80
+			
+			
+		--> docker-compose.yaml
+	   
+		    services:
+			  service-a:
+				build: ./service-a        ---->>> giving the path where dockerfile exists for building the image
+				ports:
+				  - "3100:3000"                                                             ---->>> port mapping
+				depends_on:                        ---->> Means it will build the service-b FIRST then service-a
+				  - service-b
+				environment:                                          
+				  - TAX_SERVICE_URL=http://service-b:4000
+				  - FRONTEND_URL=http://localhost:5173
+
+			  service-b:
+				build: ./service-b
+				ports:
+				  - "3200:4000"
+				  
+			  frontend:
+				build: ./tax-calculator-frontend    ---->>> giving the path where dockerfile exists for building the image
+				ports:
+				  - "5173:80"                                                                         ---->>> port mapping
+				depends_on:                                ---->> Means it will build the service-a FIRST then frontend
+				  - service-a
+				  
+				  
+		
+		
+		
+		
+		--> docker compose up -d
+		    -->it will runnn the whole service-a and service-b and frontendApp as well in detach mode
+		
+		
+		1. See the frontend app at
+		http://localhost:5173/
+		
+		2. service-a at
+		http://localhost:3100/price?country=IN&amount=300
+		
+		3. service-b at
+		http://localhost:3200/tax?country=IN
+		
+		
+		--> docker compose up -d
+		    --> if you change anything in docker-compose file then wants to apply then run this command
+			    this will apply new changes in existing running things, No need to delete everthing then re-run.
+				
+				
+				
+				
+				
+				
+				
+	
+	
+	
+	
+	
+	
+----Pushing all the images on my- dockerHub Account----->>>>mishalpandey
+	
+----docker-compose.yaml
+	
+	            services:
+				  service-a:
+					build: ./service-a
+					image: mishalpandey/tax-calculator-service-a:latest
+					ports:
+					  - "3100:3000"
+					depends_on:
+					  - service-b
+					environment:
+					  - TAX_SERVICE_URL=http://service-b:4000
+					  - FRONTEND_URL=http://localhost:5173
+
+				  service-b:
+					build: ./service-b
+					image: mishalpandey/tax-calculator-service-b:latest
+					ports:
+					  - "3200:4000"
+
+				  frontend:
+					build: ./tax-calculator-frontend
+					image: mishalpandey/tax-calculator-frontend:latest
+					ports:
+					  - "5173:80"
+					depends_on:
+					  - service-a
+					  
+					  
+----it will generate images in your docker hub locally with name 
+
+    mishalpandey/tax-calculator-service-b:latest
+	mishalpandey/tax-calculator-frontend:latest
+	mishalpandey/tax-calculator-service-a:latest
+	
+	previously without giving image: values it will generated image name like
+	app2-tax-calculator-frontend
+	app2-tax-calculator-service-b
+	app2-tax-calculator-service-a
+	taking reference from folder name structure \Docker\app2-tax-calculator then it was randomly generated
+	
+    ----means
+	
+
+		Without image:
+
+		```yaml
+		services:
+		  service-a:
+			build: ./service-a
+		```
+
+		→ Builds the image from `./service-a`, but Compose assigns the image name.
+
+		With image:
+
+		```yaml
+		services:
+		  service-a:
+			build: ./service-a
+			image: mishalpandey/tax-calculator-service-a:latest
+		```
+
+		→ Builds the image and explicitly names/tags it as `mishalpandey/tax-calculator-service-a:latest`. and if from dockerhub account mishalpandey/tax-calculator-service-a:latest
+		 already exist so in place of building the image from givne build path (build: ./service-a) it will just pull the image
+
+
+        With image only:
+
+		```yaml
+		services:
+		  service-a:
+			image: mishalpandey/tax-calculator-service-a:latest
+		```
+		
+		→ pull the image from here `mishalpandey/tax-calculator-service-a:latest` and will use it for running the image
+		
+		
+		In short:
+
+		```text
+		build  → Where to build the image from
+		image  → What to name/tag the image
+		```
+
+		The `image:` name is especially useful when pushing the image to Docker Hub.
+
+
+----docker login
+----docker compose build
+----docker compose push
+		
+		
+		
+		
+
+
+
+
+
+
+
+----docker-compose.yaml with custom network/ (Yours defined customised network), otherwise default network creation will be done and docker-compose will use that.
+ESASE MULTI NETWORK SYSTEM BANA SAKTE KUCH SERVICE EK Network USE KARE AUR KUCH DUSRA, SECURITY PURPOSE KE LIYE BUILT KAR SAKTE IF REQUIRED
+
+		services:
+		  service-a:
+			build: ./service-a
+			image: mishalpandey/tax-calculator-service-a:1.0
+			ports:
+			  - "3100:3000"
+			depends_on:
+			  - service-b
+			environment:
+			  - TAX_SERVICE_URL=http://service-b:4000
+			  - FRONTEND_URL=http://localhost:5173
+			networks:
+			  - tax-network
+
+		  service-b:
+			build: ./service-b
+			image: mishalpandey/tax-calculator-service-b:1.0
+			ports:
+			  - "3200:4000"
+			networks:
+			  - tax-network
+
+		  frontend:
+			build: ./tax-calculator-frontend
+			image: mishalpandey/tax-calculator-frontend:1.0
+			ports:
+			  - "5173:80"
+			depends_on:
+			  - service-a
+			networks:
+			  - tax-network
+
+		networks:
+		  tax-network:
+			driver: bridge
+			
+---- docker compose up -d
+----dont forget one thing if 
+    mishalpandey/tax-calculator-service-b:1.0
+	mishalpandey/tax-calculator-frontend:1.0
+	mishalpandey/tax-calculator-service-a:1.0
+	if it exist on dockerhub account then it will not build the image for local path given it will directly pull the image iwth the mentioned tag.
+	
