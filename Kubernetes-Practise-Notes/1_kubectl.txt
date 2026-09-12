@@ -1,0 +1,332 @@
+Kubernetes Guide
+
+1.1--> kubectl is just a tool to interact with kubernetes, it does'nt have the kubernetes, bydefault from the docker
+       installation we get this kubectl and via this we can not create kubernetes cluster we can just interact with the kubernetes cluster.
+	   
+1.2--> Create a kubernetes cluster via docker desktop.
+
+1.3--> do play with commands of kubectl with which we can interact with kubernetes cluster.
+
+1.4--> kubectl version --client
+       --> just a version checking command
+		   Client Version: v1.36.1
+		   Kustomize Version: v5.8.1
+		   
+1.5--> kubectl config get-context
+       --> kubectl kiska use kar rha abhi woh check kar rahe jaise docker-desktop ka, ya minikube ka, abhi docker-desktop use kar rahe kubernetes run karne ke liye waise hi minikube
+	       bhi kar sakte aur kubectl ek bus tool hai jiske through hum kubernetes se interect kar sakte (docker-desktop ya minikube ke through kubernetes cluster create kar sakte).
+		   CURRENT   NAME             CLUSTER          AUTHINFO         NAMESPACE
+	*         docker-desktop   docker-desktop   docker-desktop
+	   
+1.5--> kubectl get nodes
+       --> command for checking the nodes 
+			NAME             STATUS   ROLES           AGE     VERSION
+			docker-desktop   Ready    control-plane   5m13s   v1.36.1
+			
+1.6--> kubectl get pods
+       --> command for getting the pods
+           No resources found in default namespace.	   
+
+1.7--> kubectl create deployment web --image=nginx
+       --> command for creating pod(not actually we are just giving instruction check 1.8 point No.)
+	   deployment.apps/web created
+	   
+1.8--> kubectl get pods
+       --> command for getting the pods
+           NAME                   READY   STATUS              RESTARTS   AGE
+           web-7887448d46-vck58   0/1     ContainerCreating   0          7s
+		   
+		   
+	    NOTE:- we have not created pod what happend is actually we have created deployment then via control pane pods got created
+		       pods has been managed and created by control pane not via us 
+			   
+			   
+			   
+1.9--> Deployment vs pods vs controller-manager(of control-plane) 
+       --> deployment ek instruction file hai jo ki hum dete hai with kubectl command, then control-plane ka controller-manager
+	       create and manage karta hai pods ko remember it, hum as a developer instructions likhete bus jo control-plane ka controller-manager
+		   sab khud hi manage/create pods everything kaam karta.
+
+
+
+		   
+		   
+		   
+		   
+2.0--> Kaise hum outside the cluster apani app ko expose kare??
+       hamara app as a container pod me run horha aur woh pod cluster ke andar kisi node ke anadar hai.
+	   ab apane local browser se kaise usko access kare?? aur maanlo communication karani multiple apps hai jo hamare cluster ke anadar ho rhi unke bich?? 
+	   toh yeh sab services in kubernetes ke though hoti....
+	   -->  kubectl get svc
+			NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+			kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   3h8m
+			
+	   -->  kubectl expose deployment web --type=NodePort --port=80
+	        --> command for, via using service type = NodePort of kubernetes we can expose the running app inside pod or in a broder term in a cluster to
+			   local browser now we can get result of nginx image at http://localhost:31742/
+			   
+			service/web exposed
+			
+	   -->	kubectl get svc
+			NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+			kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP        3h9m
+			web          NodePort    10.102.224.186   <none>        80:31742/TCP   5s
+			
+			--> we can see 80 port of nginx is exposing at 31742.
+			
+	   --> kubectl get svc web
+			NAME   TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+			web    NodePort   10.102.224.186   <none>        80:31742/TCP   35s
+			
+	
+
+	
+	
+	
+
+3.0--> ReplicaSets - Self Healing in kubernetes		
+       --> yeh term kubernetes ke self healing behavior ko dikhata	
+			
+3.1--> kubectl get pods
+       --> for getting the pods
+		NAME                   READY   STATUS    RESTARTS   AGE
+		web-7887448d46-vck58   1/1     Running   0          36m
+
+3.2--> kubectl delete pod web-7887448d46-vck58
+       --> for deleting the pod via pod name
+	   
+	   Note: Now we have deleted the pod
+	   
+	   kubectl get pods
+	   --> in creating stage by kubernetes himself only we are not doing anything
+		NAME                   READY   STATUS              RESTARTS   AGE
+		web-7887448d46-ws6g5   0/1     ContainerCreating   0          5s
+
+       kubectl get pods
+	   --> getting the new pod of same app in running stage 
+		NAME                   READY   STATUS    RESTARTS   AGE
+		web-7887448d46-ws6g5   1/1     Running   0          3m53s
+       --> that show the self healing of the pods via kubernetes
+	   
+	   kubectl get pods -w 
+	   --> you can watch the entire flow of deletion and creation via this command.
+	   
+3.3--> kubectl get rs
+       --> this is command of seeing repilcaSet of the pods, you have not managed you have just wrote 1 replica
+	       in the deployment plan and then kubernetes manages it if somehow pod has been deleted 1 another pod has been 
+		   creating by kubernetes replica as we have mentioned desired repilcaSet is 1.
+		   
+		NAME             DESIRED   CURRENT   READY   AGE
+		web-7887448d46   1         1         1       55m
+	   
+	   
+3.4--> kubectl describe rs web-7887448d46
+       --> for getting details of the pod's repilcaSet
+	   
+	   
+	    Name:           web-7887448d46
+		Namespace:      default
+		Selector:       app=web,pod-template-hash=7887448d46
+		Labels:         app=web
+						pod-template-hash=7887448d46
+		Annotations:    deployment.kubernetes.io/desired-replicas: 1
+						deployment.kubernetes.io/max-replicas: 2
+						deployment.kubernetes.io/revision: 1
+		Controlled By:  Deployment/web
+		Replicas:       1 current / 1 desired
+		Pods Status:    1 Running / 0 Waiting / 0 Succeeded / 0 Failed
+		Pod Template:
+		  Labels:  app=web
+				   pod-template-hash=7887448d46
+		  Containers:
+		   nginx:
+			Image:         nginx
+			Port:          <none>
+			Host Port:     <none>
+			Environment:   <none>
+			Mounts:        <none>
+		  Volumes:         <none>
+		  Node-Selectors:  <none>
+		  Tolerations:     <none>
+		Events:
+		  Type    Reason            Age    From                   Message
+		  ----    ------            ----   ----                   -------
+		  Normal  SuccessfulCreate  57m    replicaset-controller  Created pod: web-7887448d46-vck58
+		  Normal  SuccessfulCreate  20m    replicaset-controller  Created pod: web-7887448d46-8h5bg
+		  Normal  SuccessfulCreate  9m28s  replicaset-controller  Created pod: web-7887448d46-ws6g5
+		   
+		   
+
+
+
+
+
+
+4.0--> Scale Pods to Handle More Traffic
+
+4.1--> kubectl scale deployment web --replicas=5
+       -->you can increase replicas via this command <>SCALE UP
+       
+	   deployment.apps/web scaled
+
+4.2--> kubectl get rs
+       --> status of current repilcaSet configurations  
+		NAME             DESIRED   CURRENT   READY   AGE
+		web-7887448d46   5         5         5       70m
+
+4.3--> kubectl scale deployment web --replicas=1
+       -->you can decrease replicas via this command <>SCALE DOWN
+       
+	   deployment.apps/web scaled
+
+4.4--> kubectl get rs
+       --> status of current repilcaSet configurations
+		NAME             DESIRED   CURRENT   READY   AGE
+		web-7887448d46   1         1         1       71m
+		
+4.5--> kubectl get pods -w 
+        --> you can watch the entire flow of deletion and creation of new 5 replicas via this command.
+		
+		
+				NAME                   READY   STATUS    RESTARTS   AGE
+		web-7887448d46-ws6g5   1/1     Running   0          20m
+		web-7887448d46-lghhb   0/1     Pending   0          0s
+		web-7887448d46-gq56q   0/1     Pending   0          0s
+		web-7887448d46-5jr7x   0/1     Pending   0          0s
+		web-7887448d46-bvl4w   0/1     Pending   0          0s
+		web-7887448d46-gq56q   0/1     Pending   0          1s
+		web-7887448d46-lghhb   0/1     Pending   0          1s
+		web-7887448d46-bvl4w   0/1     Pending   0          1s
+		web-7887448d46-5jr7x   0/1     Pending   0          1s
+		web-7887448d46-gq56q   0/1     ContainerCreating   0          1s
+		web-7887448d46-bvl4w   0/1     ContainerCreating   0          1s
+		web-7887448d46-5jr7x   0/1     ContainerCreating   0          1s
+		web-7887448d46-lghhb   0/1     ContainerCreating   0          1s
+		web-7887448d46-lghhb   0/1     ContainerCreating   0          3s
+		web-7887448d46-gq56q   0/1     ContainerCreating   0          3s
+		web-7887448d46-bvl4w   0/1     ContainerCreating   0          3s
+		web-7887448d46-5jr7x   0/1     ContainerCreating   0          3s
+		web-7887448d46-bvl4w   1/1     Running             0          9s
+		web-7887448d46-5jr7x   1/1     Running             0          14s
+		web-7887448d46-lghhb   1/1     Running             0          19s
+		web-7887448d46-gq56q   1/1     Running             0          24s
+		web-7887448d46-5jr7x   1/1     Terminating         0          81s
+		web-7887448d46-gq56q   1/1     Terminating         0          81s
+		web-7887448d46-bvl4w   1/1     Terminating         0          82s
+		web-7887448d46-lghhb   1/1     Terminating         0          82s
+		web-7887448d46-5jr7x   1/1     Terminating         0          82s
+		web-7887448d46-gq56q   1/1     Terminating         0          82s
+		web-7887448d46-bvl4w   1/1     Terminating         0          82s
+		web-7887448d46-lghhb   1/1     Terminating         0          82s
+		web-7887448d46-lghhb   0/1     Completed           0          83s
+		web-7887448d46-5jr7x   0/1     Completed           0          83s
+		web-7887448d46-gq56q   0/1     Completed           0          84s
+		web-7887448d46-bvl4w   0/1     Completed           0          84s
+		web-7887448d46-gq56q   0/1     Completed           0          85s
+		web-7887448d46-gq56q   0/1     Completed           0          85s
+		web-7887448d46-gq56q   0/1     Completed           0          85s
+		web-7887448d46-bvl4w   0/1     Completed           0          85s
+		web-7887448d46-bvl4w   0/1     Completed           0          85s
+		web-7887448d46-lghhb   0/1     Completed           0          86s
+		web-7887448d46-lghhb   0/1     Completed           0          86s
+		web-7887448d46-5jr7x   0/1     Completed           0          87s
+		web-7887448d46-5jr7x   0/1     Completed           0          87s
+		web-7887448d46-5jr7x   0/1     Completed           0          87s
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+5.0--> Rolling Updates with Zero Downtime
+
+5.1--> kubectl get pods
+       --> getting the pods
+	   
+		NAME                   READY   STATUS    RESTARTS   AGE
+		web-7887448d46-ws6g5   1/1     Running   0          39m
+		
+5.2-->  kubectl set image deployment/web nginx=nginx:1.25
+        --> setting a new version of that image and updating the pod's container.
+        
+		deployment.apps/web image updated
+		
+5.3-->  kubectl rollout status deployment/web
+         --> for checking the status, within zero downtown image's new tag has been used and then previously image tag generated 
+		 pod has been terminated and image having new tag has been used in that pod.
+
+		Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+		Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+		deployment "web" successfully rolled out
+		
+		
+
+5.4--> kubectl get pods
+       --> you can see new pod has been created haiving id different from older one (web-7887448d46-ws6g5)
+		NAME                   READY   STATUS    RESTARTS   AGE
+		web-5cf77c44cd-r688x   1/1     Running   0          69s
+		
+		
+5.5-->  kubectl describe pod web-5cf77c44cd-r688x
+        --> check info, the particular new version of nginx image has been used, you can see here 1.25 has been used in EVENTS
+
+			Name:             web-5cf77c44cd-r688x
+			Namespace:        default
+			Priority:         0
+			Service Account:  default
+			Node:             docker-desktop/192.168.65.3
+			Start Time:       Sat, 12 Sep 2026 20:43:37 +0530
+			Labels:           app=web
+							  pod-template-hash=5cf77c44cd
+			Annotations:      <none>
+			Status:           Running
+			IP:               10.1.0.13
+			IPs:
+			  IP:           10.1.0.13
+			Controlled By:  ReplicaSet/web-5cf77c44cd
+			Containers:
+			  nginx:
+				Container ID:   docker://45ae81ebbb2109a923bf0e6266b160d3e04194002e80705773afde7bcdf64366
+				Image:          nginx:1.25
+				Image ID:       docker-pullable://nginx@sha256:a484819eb60211f5299034ac80f6a681b06f89e65866ce91f356ed7c72af059c
+				Port:           <none>
+				Host Port:      <none>
+				State:          Running
+				  Started:      Sat, 12 Sep 2026 20:44:10 +0530
+				Ready:          True
+				Restart Count:  0
+				Environment:    <none>
+				Mounts:
+				  /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-bj426 (ro)
+			Conditions:
+			  Type                        Status
+			  PodReadyToStartContainers   True
+			  Initialized                 True
+			  Ready                       True
+			  ContainersReady             True
+			  PodScheduled                True
+			Volumes:
+			  kube-api-access-bj426:
+				Type:                    Projected (a volume that contains injected data from multiple sources)
+				TokenExpirationSeconds:  3607
+				ConfigMapName:           kube-root-ca.crt
+				Optional:                false
+				DownwardAPI:             true
+			QoS Class:                   BestEffort
+			Node-Selectors:              <none>
+			Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+										 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+			Events:
+			  Type    Reason     Age   From               Message
+			  ----    ------     ----  ----               -------
+			  Normal  Scheduled  83s   default-scheduler  Successfully assigned default/web-5cf77c44cd-r688x to docker-desktop
+			  Normal  Pulling    82s   kubelet            spec.containers{nginx}: Pulling image "nginx:1.25"
+			  Normal  Pulled     51s   kubelet            spec.containers{nginx}: Successfully pulled image "nginx:1.25" in 30.895s (30.895s including waiting). Image size: 71005258 bytes.
+			  Normal  Created    50s   kubelet            spec.containers{nginx}: Container created
+			  Normal  Started    49s   kubelet            spec.containers{nginx}: Container started
