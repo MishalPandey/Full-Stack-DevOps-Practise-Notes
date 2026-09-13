@@ -30,6 +30,7 @@ Kubernetes Guide
 1.7--> kubectl create deployment web --image=nginx
        --> command for creating pod(not actually we are just giving instruction check 1.8 point No.)
 	   deployment.apps/web created
+	   --> this deployment web ek default YAML configurations hai deployment plan ki jo kubernetes create kardeta aur web uska lebal hota.
 	   
 1.8--> kubectl get pods
        --> command for getting the pods

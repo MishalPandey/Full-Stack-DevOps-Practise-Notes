@@ -1,0 +1,72 @@
+CREATING NOW DEPLOYMENT PLAN- YAML FILE 
+    -->(Means Instruction file jiska use control-pane ka controller-manager use karega as a Noted point while managing pods, nods and everthing means while doing kubernetes works)
+	
+	
+1.0--> kubectl create deployment web --image=nginx
+       --> this deployment ek default YAML configurations hai deployment plan ki jo kubernetes create kardeta aur web uska lebal hai hum define kar rhe.
+	   
+1.1--> kubectl get deployment web -o yaml
+       --> getting the details of default deployment which we have created for nginx image
+	   
+					apiVersion: apps/v1
+					kind: Deployment
+					metadata:
+					  annotations:
+						deployment.kubernetes.io/revision: "1"
+					  creationTimestamp: "2026-09-13T09:44:35Z"
+					  generation: 1
+					  labels:
+						app: web
+					  name: web
+					  namespace: default
+					  resourceVersion: "628"
+					  uid: 12800f36-f184-4c11-aed6-9953cad54db9
+					spec:
+					  progressDeadlineSeconds: 600
+					  replicas: 1
+					  revisionHistoryLimit: 10
+					  selector:
+						matchLabels:
+						  app: web
+					  strategy:
+						rollingUpdate:
+						  maxSurge: 25%
+						  maxUnavailable: 25%
+						type: RollingUpdate
+					  template:
+						metadata:
+						  labels:
+							app: web
+						spec:
+						  containers:
+						  - image: nginx
+							imagePullPolicy: Always
+							name: nginx
+							resources: {}
+							terminationMessagePath: /dev/termination-log
+							terminationMessagePolicy: File
+						  dnsPolicy: ClusterFirst
+						  restartPolicy: Always
+						  schedulerName: default-scheduler
+						  securityContext: {}
+						  terminationGracePeriodSeconds: 30
+					status:
+					  availableReplicas: 1
+					  conditions:
+					  - lastTransitionTime: "2026-09-13T09:44:46Z"
+						lastUpdateTime: "2026-09-13T09:44:46Z"
+						message: Deployment has minimum availability.
+						reason: MinimumReplicasAvailable
+						status: "True"
+						type: Available
+					  - lastTransitionTime: "2026-09-13T09:44:36Z"
+						lastUpdateTime: "2026-09-13T09:44:46Z"
+						message: ReplicaSet "web-7887448d46" has successfully progressed.
+						reason: NewReplicaSetAvailable
+						status: "True"
+						type: Progressing
+					  observedGeneration: 1
+					  readyReplicas: 1
+					  replicas: 1
+					  terminatingReplicas: 0
+					  updatedReplicas: 1
