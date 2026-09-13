@@ -1,5 +1,6 @@
-CREATING NOW DEPLOYMENT PLAN- YAML FILE 
-    -->(Means Instruction file jiska use control-pane ka controller-manager use karega as a Noted point while managing pods, nods and everthing means while doing kubernetes works)
+CREATING NOW DEPLOYMENT AND SERVICE- YAML FILE 
+    --> deployment(Means Instruction file jiska use control-pane ka controller-manager use karega as a Noted point while managing pods, nodes and everthing means while doing kubernetes works)
+	--> service (Exposing our app's responses outside cluster from the pods and between the pods inside the cluster)
 	
 	
 1.0--> kubectl create deployment web --image=nginx
@@ -119,8 +120,360 @@ CREATING NOW DEPLOYMENT PLAN- YAML FILE
 
 1.4--> Difference in both
        -->
-	   
 		kubectl get svc web -o yaml <> How is traffic being exposed/routed to my web Pods?
 
 		kubectl get deployment web -o yaml <> How is my web application configured and how are its Pods being managed?
+		
+		
+		
+		
+		
+		
+2.0--> create app.yaml
+
+			apiVersion: apps/v1
+			kind: Deployment
+			metadata:
+			  name: myapp
+			spec:
+			  replicas: 2
+			  selector:
+				matchLabels:
+				  app: myapp
+			  template:
+				metadata:
+				  labels:
+					app: myapp
+				spec:
+				  containers:
+					- name: myapp
+					  image: nginx
+					  ports:
+						- containerPort: 80
+						
+
+3.0--> create service.yaml
+
+			apiVersion: v1
+			kind: Service
+			metadata:
+			  name: myapp
+			spec:
+			  selector:
+				app: myapp
+			  type: NodePort
+			  ports:
+				- port: 80                                     //This is service port traffic comes from http://localhost:32000/ here 
+				  targetPort: 80                               //Then this service port is mapped to pods/Container port that is targetPort
+				  nodePort: 32000                              //This is browers port http://localhost:32000/ locally we can access via this.
+				  
+				  
+
+
+4.0--> kubectl apply -f app.yaml
+       --> apply configurations from deployment file
+    
+	deployment.apps/myapp created
+	
+	
+5.0--> kubectl apply -f service.yaml
+       --> apply configurations from service file
+	   
+    service/myapp created
+	
+	
+6.1--> kubectl get pods
+		NAME                     READY   STATUS    RESTARTS        AGE
+		myapp-6485f4f975-bhsdp   1/1     Running   1 (6m23s ago)   19m
+		myapp-6485f4f975-pp47j   1/1     Running   1 (6m23s ago)   19m
+	
+	   --> 2 replica's we have mentioned and 2 has been created.
+	
+6.2--> kubectl get svc
+		NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+		kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP        119m
+		myapp        NodePort    10.96.229.247    <none>        80:32000/TCP   18m
+		
+	   --> myapp label/namespace pod has been created.
+	   --> http://localhost:32000/ as well working
+	   
+6.3--> kubectl delete -f service.yaml
+       --> delete configurations from service file
+       service "myapp" deleted from default namespace
+
+6.4--> kubectl delete -f app.yaml
+       --> delete configurations from deployment file
+       deployment.apps "myapp" deleted from default namespace
+	   
+6.5--> kubectl get pods
+		NAME                   READY   STATUS    RESTARTS      AGE
+		web-7887448d46-qdv44   1/1     Running   1 (14m ago)   125m
+		
+		--> deleted the deployment myapp
+		
+6.6--> kubectl get svc
+		NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+		kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP        126m
+		web          NodePort    10.105.161.161   <none>        80:31661/TCP   124m
+		
+		--> deleted the service myapp
+		
+6.7--> kubectl apply -f app.yaml -f service.yaml
+       --> apply configurations from  deployment and service file together
+		deployment.apps/myapp created
+		service/myapp created
+		
+6.8--> kubectl delete -f service.yaml -f app.yaml
+        --> delete configurations from  deployment and service file together
+		service "myapp" deleted from default namespace
+		deployment.apps "myapp" deleted from default namespace
+		
+6.9--> kubectl apply -f .
+       --> apply configurations from  all file together in selected directory
+		deployment.apps/myapp created
+		service/myapp created
+		
+6.10--> kubectl delete -f .
+        --> delete configurations from all file together in selected directory
+		deployment.apps "myapp" deleted from default namespace
+		service "myapp" deleted from default namespace
+		
+
+7.0--> combine deployment and service file<> A SINGLE YAML FILE for configurations
+
+				
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: myapp
+				spec:
+				  replicas: 2
+				  selector:
+					matchLabels:
+					  app: myapp
+				  template:
+					metadata:
+					  labels:
+						app: myapp
+					spec:
+					  containers:
+						- name: myapp
+						  image: nginx
+						  ports:
+							- containerPort: 80
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: myapp
+				spec:
+				  selector:
+					app: myapp
+				  type: NodePort
+				  ports:
+					- port: 80
+					  targetPort: 80
+					  nodePort: 32000
+					  
+					  
+	NOTE: kubectl apply -f app.yaml
+	
+	
+8.0--> with the environmental values combine deployment and service file<> A SINGLE YAML FILE for configurations
+       --> these env values will not be used via nginx image but we can log into pods and check these values.
+
+
+
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: myapp
+				spec:
+				  replicas: 2
+				  selector:
+					matchLabels:
+					  app: myapp
+				  template:
+					metadata:
+					  labels:
+						app: myapp
+					spec:
+					  containers:
+						- name: myapp
+						  image: nginx
+						  env:
+							- name: APP_MESSAGE
+							  value: "Hello from app.yaml"
+							- name: DB_PASSWORD
+							  value: "DB_PASSWORD@123" #will not be used in nginx image but I will just log into pods and check these env values
+						  ports:
+							- containerPort: 80
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: myapp
+				spec:
+				  selector:
+					app: myapp
+				  type: NodePort
+				  ports:
+					- port: 80
+					  targetPort: 80
+					  nodePort: 32000
+
+
+
+
+8.1--> kubectl apply -f app.yaml
+		deployment.apps/myapp created
+		service/myapp created
+		
+8.2--> kubectl get pods
+		NAME                     READY   STATUS    RESTARTS      AGE
+		myapp-5dcf7c7c77-28xwj   1/1     Running   0             17s
+		myapp-5dcf7c7c77-s496r   1/1     Running   0             17s
+		web-7887448d46-qdv44     1/1     Running   1 (42m ago)   153m
+		
+		
+8.3--> kubectl exec -it myapp-5dcf7c7c77-28xwj -- sh
+		# printenv | grep DB_PASSWORD
+		DB_PASSWORD=DB_PASSWORD@123
+		# printenv | grep APP_MESSAGE
+		APP_MESSAGE=Hello from app.yaml
+		
+		
+    NOTE:- We have logged into the pod and checked these env values successfully, BUT VIA THIS APPROACH WE WILL EXPOSING THE ENV VALUES during commiting on github.
+
+
+
+
+
+
+
+
+
+
+
+KUBERNETES PROVIDES CONFIG-MAPS AND SECRETS for this problem--->>
+We have logged into the pod and checked these env values successfully, BUT VIA THIS APPROACH WE WILL EXPOSING THE ENV VALUES during commiting on github.
+
+
+9.0--> app.yaml
+
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: myapp
+				spec:
+				  replicas: 2
+				  selector:
+					matchLabels:
+					  app: myapp
+				  template:
+					metadata:
+					  labels:
+						app: myapp
+					spec:
+					  containers:
+						- name: myapp
+						  image: nginx
+						  env:
+							- name: APP_MESSAGE
+							  valueFrom:
+								configMapKeyRef:
+								  name: app-config
+								  key: APP_MESSAGE
+							- name: DB_PASSWORD
+							  valueFrom:
+								secretKeyRef:
+								  name: app-secrets
+								  key: DB_PASSWORD
+								  #will not be used in nginx image but I will just log into pods and check these env values
+						  ports:
+							- containerPort: 80
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: myapp
+				spec:
+				  selector:
+					app: myapp
+				  type: NodePort
+				  ports:
+					- port: 80
+					  targetPort: 80
+					  nodePort: 32000
+					  
+					  
+
+9.1--> config.yaml
+       --> this is mostly be used for non-sensitive configurations secrets like URL of any other service and those things.
+
+				apiVersion: v1
+				kind: ConfigMap
+				metadata:
+				  name: app-config
+				data:
+				  APP_MESSAGE: "Hello from Kubernetes ConfigMap!"
+				  
+9.2--> secret.yaml
+        --> this is mostly be used for sensitive configurations secrets like DB_PASSWORD and other passwords, JWT key and those things.
+
+				apiVersion: v1
+				kind: Secret
+				metadata:
+				  name: db-secret
+				type: Opaque
+				data:
+				    DB_PASSWORD: cGFzc3dvcmQ= 
+				#This is the base64 encoded value of "password". You can decode it using the command: `echo cGFzc3dvcmQ= | base64 --decode`
+
+				  
+9.3--> kubectl apply -f config.yaml
+       
+	   configmap/app-config created
+
+9.4--> kubectl apply -f secret.yaml
+       
+	   secret/app-secret created
+	   
+9.5--> kubectl apply -f app.yaml
+
+		deployment.apps/myapp created
+		service/myapp created
+		
+9.6--> kubectl get pods
+
+		NAME                     READY   STATUS              RESTARTS      AGE
+		myapp-66bbbc97dd-jdkgw   1/1     Running             0             7s
+		myapp-66bbbc97dd-nlgd5   0/1     ContainerCreating   0             7s
+		web-7887448d46-qdv44     1/1     Running             1 (85m ago)   3h16m
+		
+9.7--> kubectl get pods
+
+		NAME                     READY   STATUS    RESTARTS      AGE
+		myapp-66bbbc97dd-jdkgw   1/1     Running   0             14s
+		myapp-66bbbc97dd-nlgd5   1/1     Running   0             14s
+		web-7887448d46-qdv44     1/1     Running   1 (85m ago)   3h16m
+
+9.8--> kubectl exec -it myapp-66bbbc97dd-jdkgw -- sh
+
+		# printenv | grep DB_PASSWORD
+		DB_PASSWORD=password
+		# printenv | grep APP_MESSAGE
+		APP_MESSAGE=Hello from Kubernetes ConfigMap!
+		
+		NOTE:- Successfully verified the env values via logging into pods and then printing the values.
+		NOTE AS A JOKE:- we have given encripted value of DB_PASSWORD in secret.yaml and then via printing via logging into pods we are getting DB_PASSWORD=password, 
+		                 its kubernetes behavior its show like this after decripting values.
+
+
+
+
+
+	
+
+
 
