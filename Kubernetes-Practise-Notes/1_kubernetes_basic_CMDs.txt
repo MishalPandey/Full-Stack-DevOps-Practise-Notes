@@ -330,3 +330,128 @@ Kubernetes Guide
 			  Normal  Pulled     51s   kubelet            spec.containers{nginx}: Successfully pulled image "nginx:1.25" in 30.895s (30.895s including waiting). Image size: 71005258 bytes.
 			  Normal  Created    50s   kubelet            spec.containers{nginx}: Container created
 			  Normal  Started    49s   kubelet            spec.containers{nginx}: Container started
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+			  
+
+6.0--> How Service Selects Pods, Importance of app-Selectors?
+
+6.1-->  kubectl  get svc web -o yaml
+        --> this command is giving details about the deployment instruction, but for this we have not given deployment instruction means it has 
+		    already defined in the service, but yes we can see here and learn how deployment instruction looks like and here important thing is<>
+			
+			<>label - label is key value pair, means 
+			selector:
+			 app: web
+			 
+			above thing it means jaise bahut sare pods hote ek cluster me toh har pods ka label decide karna taki jab koi request url call ho ya toh similar
+			label se configurations change ho toh unke similar label wale pods me hi request hit ho ya toh similar label wale pods ki hi configurations chnage ho.
+
+		apiVersion: v1
+		kind: Service
+		metadata:
+		  creationTimestamp: "2026-09-12T14:11:44Z"
+		  labels:
+			app: web
+		  name: web
+		  namespace: default
+		  resourceVersion: "6962"
+		  uid: c3247c20-92bd-4a9b-a8a1-d6771f8d09c8
+		spec:
+		  clusterIP: 10.102.224.186
+		  clusterIPs:
+		  - 10.102.224.186
+		  externalTrafficPolicy: Cluster
+		  internalTrafficPolicy: Cluster
+		  ipFamilies:
+		  - IPv4
+		  ipFamilyPolicy: SingleStack
+		  ports:
+		  - nodePort: 31742
+			port: 80
+			protocol: TCP
+			targetPort: 80
+		  selector:
+			app: web
+		  sessionAffinity: None
+		  type: NodePort
+		status:
+		  loadBalancer: {}
+		  
+		  
+		  
+6.2--> kubectl expose deployment web --type=NodePort --port=80
+       --> from this command what we were doing is WEB LABEL wale pods ke 80 port ko expose kar rahe the check point no- 2.0
+	       what actually happend is via this call http://localhost:31742/ this has gone to service first (NodePort) then that traffic is 
+		   forwarded to web label pods.
+	   
+	   
+6.3--> kubectl get pods
+       --> for getting the pods 
+	   
+		NAME                   READY   STATUS    RESTARTS      AGE
+		web-5cf77c44cd-r688x   1/1     Running   2 (51m ago)   15h
+
+6.4--> kubectl get pods --show-labels
+       --> for getting the pods with their Labels
+	   
+		NAME                   READY   STATUS    RESTARTS      AGE   LABELS
+		web-5cf77c44cd-r688x   1/1     Running   2 (51m ago)   15h   app=web,pod-template-hash=5cf77c44cd
+		
+6.5--> kubectl label pod web-5cf77c44cd-r688x app-
+       --> for removing the lables for the particular pods
+
+       pod/web-5cf77c44cd-r688x unlabeled
+	   
+	   
+	   
+6.6--> kubectl get pods --show-labels 
+       --> we are getting the 2 pods now one is with the unlabeled means have removed his label( where label was app=web) whose name is same to the older pod
+	       and another a new pod has been created with his label (app=web)
+		   
+		NOTE:- kubernetes is maintaining the pod thats why another pod has been created but yes we can see that we have unlabeled the pod.
+       
+		NAME                   READY   STATUS    RESTARTS      AGE   LABELS
+		web-5cf77c44cd-llpv2   1/1     Running   0             22s   app=web,pod-template-hash=5cf77c44cd
+		web-5cf77c44cd-r688x   1/1     Running   2 (54m ago)   15h   pod-template-hash=5cf77c44cd
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+7.0--> Debug pods
+
+7.1--> kubectl get pods
+       --> for getting the pods
+		NAME                   READY   STATUS    RESTARTS   AGE
+		web-7887448d46-qdv44   1/1     Running   0          43s 
+		
+
+7.2--> kubectl logs web-7887448d46-qdv44
+       --> for getting the logs from the pod 
+	   
+	   
+7.3--> kubectl exec -it web-7887448d46-qdv44 -- sh
+       --> going inside the pod to check the things under pod
+
+		# ls
+		bin  boot  dev  docker-entrypoint.d  docker-entrypoint.sh  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+		# exit
+
+
+7.4--> kubectl describe pod web web-7887448d46-qdv44
+       --> checking the pod details whole what image using to container id and everything.
+	   
+	   
