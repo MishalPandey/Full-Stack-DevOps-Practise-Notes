@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d181e054-5e38-4be3-8584-3026301db680" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Kubernetes-Practise-Notes/3_app1-hello_deployment_and_service_YAML.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Kubernetes-Practise-Notes/2_create_deployment_and_service_YAML.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Kubernetes-Practise-Notes/2_create_deployment_and_service_YAML.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
