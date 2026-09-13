@@ -1,5 +1,7 @@
 Kubernetes Guide
 
+DEPLOYMENT--->>
+
 1.1--> kubectl is just a tool to interact with kubernetes, it does'nt have the kubernetes, bydefault from the docker
        installation we get this kubectl and via this we can not create kubernetes cluster we can just interact with the kubernetes cluster.
 	   
@@ -30,7 +32,6 @@ Kubernetes Guide
 1.7--> kubectl create deployment web --image=nginx
        --> command for creating pod(not actually we are just giving instruction check 1.8 point No.)
 	   deployment.apps/web created
-	   --> this deployment web ek default YAML configurations hai deployment plan ki jo kubernetes create kardeta aur web uska lebal hota.
 	   
 1.8--> kubectl get pods
        --> command for getting the pods
@@ -38,8 +39,8 @@ Kubernetes Guide
            web-7887448d46-vck58   0/1     ContainerCreating   0          7s
 		   
 		   
-	    NOTE:- we have not created pod what happend is actually we have created deployment then via control pane pods got created
-		       pods has been managed and created by control pane not via us 
+	    NOTE:- we have not created pod what happend is actually we have created deployment then via control-pane pods got created,
+		       pods has been managed and created by control pane and for managing and creating as an instruction control-plane will read deployment
 			   
 			   
 			   
@@ -51,7 +52,7 @@ Kubernetes Guide
 
 
 		   
-		   
+SERVICES--->>		   
 		   
 		   
 2.0--> Kaise hum outside the cluster apani app ko expose kare??
@@ -82,7 +83,7 @@ Kubernetes Guide
 	
 
 	
-	
+REPLICASETS--->>	
 	
 
 3.0--> ReplicaSets - Self Healing in kubernetes		
@@ -159,7 +160,7 @@ Kubernetes Guide
 		   
 
 
-
+SCALING PODS--->>
 
 
 
@@ -240,7 +241,7 @@ Kubernetes Guide
 		
 		
 		
-		
+ROLLING UPDATES with ZERO DOWNTIME--->>		
 		
 		
 		
@@ -337,7 +338,7 @@ Kubernetes Guide
 			  
 			  
 			  
-			  
+SERVICE ka APP-SELECTORS   --->>			  
 			  
 			  
 			  
@@ -345,8 +346,8 @@ Kubernetes Guide
 6.0--> How Service Selects Pods, Importance of app-Selectors?
 
 6.1-->  kubectl  get svc web -o yaml
-        --> this command is giving details about the deployment instruction, but for this we have not given deployment instruction means it has 
-		    already defined in the service, but yes we can see here and learn how deployment instruction looks like and here important thing is<>
+        --> this command is giving details about the service, but for this we have not given service instruction means it has 
+		    default added in the deplyment's service, but yes we can see here and learn how service instruction looks like and here important thing is<>
 			
 			<>label - label is key value pair, means 
 			selector:

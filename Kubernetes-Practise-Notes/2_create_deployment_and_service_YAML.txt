@@ -3,10 +3,18 @@ CREATING NOW DEPLOYMENT PLAN- YAML FILE
 	
 	
 1.0--> kubectl create deployment web --image=nginx
-       --> this deployment ek default YAML configurations hai deployment plan ki jo kubernetes create kardeta aur web uska lebal hai hum define kar rhe.
-	   
-1.1--> kubectl get deployment web -o yaml
-       --> getting the details of default deployment which we have created for nginx image
+       --> this deployment ek default YAML configurations hai deployment plan ki jo kubernetes create kardeta aur web uska namespace/lebal hai hum define kar rhe.
+	
+
+1.1--> kubectl get deployment -o yaml
+       --> This gets the YAML of all Deployments in the current namespace
+
+	
+1.2--> kubectl get deployment web -o yaml
+       --> here only YAML for namespace = web Deployment 
+	       NOTE:- deployment defines what Pods should exist and how they should be managed.
+		   
+		   getting the details of default deployment which we have created for nginx image.
 	   
 					apiVersion: apps/v1
 					kind: Deployment
@@ -70,3 +78,49 @@ CREATING NOW DEPLOYMENT PLAN- YAML FILE
 					  replicas: 1
 					  terminatingReplicas: 0
 					  updatedReplicas: 1
+					  
+					  
+1.3--> kubectl get svc web -o yaml
+       --> This gets the YAML of the Service named web.
+           NOTE:- A Service defines how traffic reaches your Pods.
+
+
+					apiVersion: v1
+					kind: Service
+					metadata:
+					  creationTimestamp: "2026-09-13T09:45:13Z"
+					  labels:
+						app: web
+					  name: web
+					  namespace: default
+					  resourceVersion: "683"
+					  uid: 1a2f43c4-4b85-4c72-8bcc-376c001a0056
+					spec:
+					  clusterIP: 10.105.161.161
+					  clusterIPs:
+					  - 10.105.161.161
+					  externalTrafficPolicy: Cluster
+					  internalTrafficPolicy: Cluster
+					  ipFamilies:
+					  - IPv4
+					  ipFamilyPolicy: SingleStack
+					  ports:
+					  - nodePort: 31661
+						port: 80
+						protocol: TCP
+						targetPort: 80
+					  selector:
+						app: web
+					  sessionAffinity: None
+					  type: NodePort
+					status:
+					  loadBalancer: {}
+
+
+1.4--> Difference in both
+       -->
+	   
+		kubectl get svc web -o yaml <> How is traffic being exposed/routed to my web Pods?
+
+		kubectl get deployment web -o yaml <> How is my web application configured and how are its Pods being managed?
+
