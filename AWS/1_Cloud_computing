@@ -1,0 +1,84 @@
+1--> Cloud Computing
+     --> Using computes, storage, and software over the internet instead of owning and managing them on your own computer.
+	
+2--> Cloud Services
+     --> 1. SaaS (Software as a Service) ,example- canva, gmail, cloud Excel and all, woh wale software jo download na karna pade jisko url se access karte and use karte.
+	 --> 2. PaaS (Platform as a Service) ,example- HeroKu, yaha platform ko hum manage nhi karte jaise hamare paas hamare code hai just push the repository here yeh deploy, scaling manage platform kardega.
+	 --> 3. IaaS (Infrastucture as a service) ,exmaple- AWS, GCP, Azure Cloud Services jaha hum rent kar sakte sab storage, Computing power, computers,Infrastucture jisse hume khud manage/handle karna hoga.
+	                                            storage, Computers hum nhi manage karenge hum apane applications jo deploy karte usko manage karenge.
+	 
+3--> Why Do we need Cloud Computing?
+     --> Cloud computing allows us to use computing resources over the internet without owning and managing physical infrastructure.
+
+		Key Points:
+
+		1. Cost Saving – No need to buy and maintain expensive hardware.
+		2. Scalability – Easily increase or decrease resources based on demand.
+		3. Faster Deployment – Quickly create servers, databases, and other services.
+		4. Global Access – Applications and data can be accessed from anywhere.
+		5. High Availability – Provides backup, redundancy, and disaster recovery.
+		6. Less Maintenance – Cloud providers manage much of the underlying infrastructure.
+		7. Pay-as-you-go – Pay mainly for the resources you use.
+		8. Security & Reliability – Provides built-in security, monitoring, and backup services.
+
+		In short: Cloud computing makes IT more flexible, scalable, reliable, and cost-effective.
+		
+4--> Data Centers ?
+     --> its a building having full of servers( servers means computers ). 
+	 
+5--> Availablity Zones(AZs) ?
+     --> Multiple Data centers Combinely form a Zone means Availability Zone. (suppose ek data centers band pad gya toh us availablity zone ke andar ek aur data center
+	     hoga then with having same servers and data within that data center toh fullfil kar sakte requirements of customers esliye ek Azs me multiple data centers hote )
+	 
+	 
+6--> region?
+     --> Multiples Availability Zone Combinely form a region. (suppose ek data Az's band pad gya toh us region ke andar ek aur AZ's
+	     hoga then with having same data centers within that Az's toh fullfil kar sakte requirements of customers esliye ek region me multiple Az's hote )
+	     example:- North Virginia, Mumbai(India), Ireland (Europe)
+		 
+7--> which region we should choose?
+     --> for our Applications suppose I want to host my Application for mainly Indian user's so I should choose Mumbai region so that
+     the accesiblity time would be less and some of the region have some contraints by their governmet related to their data security so I can'nt use that or 
+	 some of the region have more price for the same Asset (Pricing will be different on different regions)
+	 
+
+9--> create an account on AWS, check and explore billing and cost management
+	 
+8--> IAM = Identity and Access Managements
+     --> IAM Users, IAM Groups, IAM Roles, IAM policies = IAM 
+	 --> Ab AWS account create kardiya apane Bussiness ke liye toh ab sare developers, Finance teams sabko ek ek user bana ke dena hoga (User id + password)
+	     via that they can access aws account aur es user ko id jo humne create kiya hai via IAM hum eske accesses pe restriction bhi laga sakte jaise financial team user
+		 sirf costing and billing information dekh paye with their used id and password, developres sab access kar paye.
+		 
+9--> IAM Users
+     --> Represents an individual person(developer, tester).
+	 --> Can have username + password (console access).
+	 --> Can have access keys (CLI/SDK access).
+	 
+10--> IAM Groups
+      --> A Collection of users with shared permissions.
+	  --> Example:
+	        Group: Developers, Policy: PowerUserAccess.
+			Group: Viewers, Policy: ReadOnlyAcess.
+		
+11--> IAM Roles
+      --> Temporary identities assumed by users, apps, or AWS services.
+	  --> No permanent credentials (keys are short-lived).
+	  --> Best practise for EC2, Lambda, EKS, CI/CD.
+	  --> jaise EC2 instance ko jarurat padi AWS account of your access karne ki kuch jarurat ki wajah se toh temporary role hai IAM role
+	      jo grant karke EC2 instance tumhare AWS account ko access kar sakta
+	  
+12--> IAM Policies
+      --> JSON documents defining permissions.
+	  
+13--> create some of the users and some of the groups, roles and policies and play with them.
+
+14--> BEST PRACTICES
+      -->1. Never use the root account
+	  -->2. Set up IAM Users/Groups
+	  -->3. Multi Factor Authentication Everywhere
+	  -->4. Follow Principle of Least Privilege:
+	        -->Don't give Administator Access to everyone.
+			-->Instead, create narrow policies (e.g., allow ECE2 but deny IAM chnages).
+
+    
