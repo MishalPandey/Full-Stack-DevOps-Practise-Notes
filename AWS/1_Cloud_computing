@@ -80,5 +80,65 @@
 	  -->4. Follow Principle of Least Privilege:
 	        -->Don't give Administator Access to everyone.
 			-->Instead, create narrow policies (e.g., allow ECE2 but deny IAM chnages).
+			
+			
+
+
+15--> What is EC2?
+      --> Elastic Compute Cloud.
+	  --> Cloud pe tumhara system/Computer jo elastic hai matlab expandable hai.
+	  
+16--> Instance?
+      --> Instance is running virtual server of yours.
+	  --> Like we say launch an EC2 instance
+	  
+17--> AMI 
+      --> Amazon Machine Image
+	  --> it is pre-built OS along with software template that we can pick when launching an instance.
+	  
+18--> EBS
+      --> Elastic Block Store
+	  --> its like an hardrive which help you to save data and will get used when launch EC2 instance.
+	  --> Jab bhi EC2 instance create karenge hame chahiye hoga uske liye storage kyuki waha bahut si chinze hum host karenge jaise websites
+	      toh woh storage ke liye EBS use karte.
+		  
+		  
+19--> ECE2 instances can be used for->
+      
+	  -->1. Hosting Apps + APIs
+	  -->2. Batch Jobs, scheduled tasks, background workers
+	  -->3. Machine learning
+	  -->4. Dev/test ENV
+	  
+20--> How to Launch an EC2 instance?
+
+      --> create an instance of type ubuntu OS.
+	  --> Connect that with your local browser.
+	      --> open gitbash and with key-pair file location( file which you will download from aws account my-ec2-key.pem file after key-pair creation)   
+			run command: ssh -i my-ec2-key.pem ubuntu@61.16.196.184
+			
+			-->ubuntu is the default user you can create manual as well in aws account, and Public IPv4 address from aws account(ubuntu@61.16.196.184)
+			
+
+21--> Storage on AWS
+
+    -->1. Object Storage
+	   --> S3 , it stores like images, videos, backups
+	   --> S3 is Simple Storage Service, it is Scalable, Durable 99.99999% means it is used for storage of images and any files with millions of count ad it is durable as well.
+	       in Cloud so we can download, share, anytime anywhere with apis and all.
+	   --> Bucket- S3 me images hum sare stored karenge toh woh Bucket me hi jayenge.
+	   --> AND BUCKET NAME SHOULD BE UNIQUE ACROSS WHOLE AWS GLOBALY NOT ONLY YOURS ACCOUNT IT SHOULD ALWAYS BE UNIQUE.
+	   --> under Bucket Objects has been stored that is nothing but images, videos and all.
+	   --> Objects are combination of File + Metadata (File means images and all, Metadata means its type and permissions under it.)
+	   
+	-->2. Block Storage
+	   --> EBS , jaise computer ke liye hardrive lagate aur extra storege milte waise type ka hi instance ke liye yeh storage hai
+	   
+	-->3. File Storage
+	   --> EFS, shared file system like network drive and all...
+
+
+      
+	  
 
     
