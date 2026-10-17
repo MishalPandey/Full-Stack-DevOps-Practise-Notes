@@ -139,6 +139,199 @@
 
 
       
-	  
+22--> Create a S3 Bucket on AWS with a unique Name globaly like my-bucket06082002
 
-    
+23--> Upload a hello.txt File on this S3 bucket.
+
+24--> Add permision (Policy) so that you can access that hello.txt anywhere with the url.
+      -->Permision-
+	    {
+			"Version": "2012-10-17",
+			"Statement": [
+				{
+					"Sid": "AllowPublicReadAccess",
+					"Effect": "Allow",
+					"Principal": "*",
+					"Action": "s3:GetObject",
+					"Resource": "arn:aws:s3:::my-bucket06082002/*"
+				}
+			]
+		}
+		
+	  -->Link- https://my-bucket06082002.s3.eu-north-1.amazonaws.com/hello.txt
+		
+		
+25--> Host a Static Website via S3 Bucket. 
+      --> upload index.html file after enabling static website hosting in S3 bucket from properties of your bucket my-bucket06082002
+	  --> then open https://my-bucket06082002.s3.eu-north-1.amazonaws.com/index.html
+	  
+	  
+26--> Versioning in S3 Bucket
+      --> enable versioning from properties of your bucket my-bucket06082002
+	  --> upload same hello.txt with different texts values.
+	  
+	  -->Link- https://my-bucket06082002.s3.eu-north-1.amazonaws.com/hello.txt
+
+
+27--> AMAZON RDS
+      --> Relational Database Service Managed by Amazon.
+	  --> Bus Cloud pe apana database setup karlo baki sab version update of database everything will be done by Amazon
+	      you just have to play with your data and manage your database data. 
+
+28--> Connecting Created Database in PgAdmin(postges database), Intellij(springboot application)
+      --> 1. Create a postgres database in AWS- Aurora and RDS
+	  --> 2. Use Connectivity & security -> Endpoint & port
+				Endpoint: database-1.czy6we00s6m8.eu-north-1.rds.amazonaws.com
+				Port: 5432
+				
+			username: postgres
+            password: YOUR SAVED PASSWORD
+			
+			
+			
+			
+	  --> 3. NOTE: YOU WILL GET AWS RDS PostgreSQL Connection Timeout 
+
+			1. Problem
+			- Unable to connect to AWS RDS PostgreSQL database.
+			- Error: Connection timeout expired
+			- Endpoint: database-1.czy6we00s6m8.eu-north-1.rds.amazonaws.com
+			- Port: 5432
+			- AWS Region: Europe (Stockholm), eu-north-1
+
+			2. Root Cause
+			The RDS instance was using the DEFAULT SECURITY GROUP, which allowed inbound traffic only from resources associated with the same security group.
+			My local computer was not covered by this rule, so the connection was blocked.
+
+			3. Security Group Configuration Added- MyDatabaseServerGroup 
+
+			| Setting | Value |
+			| Security Group | sg-09177843777c53313 |
+			| Type | PostgreSQL |
+			| Protocol | TCP |
+			| Port | 5432 |
+			| Source | My IP (Public-IP/32) |
+			
+			
+			
+-->			My IP- matlb woh same internet connection jo AWS use kar rha hai uska Network Use karlo aur mera Computer aur AWS dono same network use
+                   kar rhe toh connection ban gya dubara phirse issue aaya toh same MY IP select karke Save karna hoga security group me tab connection banega.
+            YEH CONNECTION ALLOW KAR RAHA SAME NETWORK KE IP KO DATABASE SE CONNECT KARNE KE LIYE.		
+
+-->         In place of MY IP- agar anywhere-IPv4 kardiya toh har system IPv4 wala connect kar paayega, same anywhere-IPV6	kardiya toh har system IPv6 wala
+            connect kar paayega toh security group bahut important topic hai check this.	
+
+			Why did I add this rule?
+
+			- To allow my computer to connect to the RDS database.
+			- Port 5432 is the default PostgreSQL port.
+			- Selecting **My IP** restricts access to my current public IP address.
+
+			4. How the Connection Works
+
+			My Computer → Internet → AWS Security Group → RDS PostgreSQL (Port 5432)
+			The security group checks whether incoming traffic matches its inbound rules before allowing access to the database.
+
+			5. How I Verified the Fix
+            
+			Run this command in PowerShell:
+			powershell: Test-NetConnection database-1.czy6we00s6m8.eu-north-1.rds.amazonaws.com -Port 5432
+			Expected result: TcpTestSucceeded : True
+
+			6. Key Learnings
+			- A connection timeout can indicate a network or firewall configuration issue.
+			- Security groups act as virtual firewalls for AWS resources.
+			- The database region (Stockholm) and my physical location (Mumbai) were not the root cause.
+			- If my public IP changes, I may need to update the security group rule.
+			- Avoid `0.0.0.0/0` for database access because it allows connections from any IPv4 address.
+
+			Conclusion: The connection started working after I added an inbound PostgreSQL rule allowing traffic from my public IP on TCP port `5432`.
+			
+			
+
+-->     created a student table in Cloud database and verified via springboot Application- TestCloudDatabase.
+
+        with this application.yml configuration 
+		
+		
+		spring:
+		  application:
+			name: TestCloudDatabase
+		  datasource:
+			url: jdbc:postgresql://database-1.czy6we00s6m8.eu-north-1.rds.amazonaws.com/testdb
+			username: postgres
+			password: ${DB_PASSWORD}
+			driver-class-name: org.postgresql.Driver
+
+		  jpa:
+			database-platform: org.hibernate.dialect.PostgreSQLDialect
+			hibernate:
+				ddl-auto: update
+				
+				
+				
+				
+				
+
+
+
+29-->  IP Address what it is??
+       --> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

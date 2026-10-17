@@ -1,0 +1,163 @@
+Commands --->>
+
+1.1--> docker run hello-world
+       -->it will pull the image and run the container when iamge does'nt exist in your machine
+	   -->or it will run the new container of existing image of hello-world application
+	   
+	   
+	 example- docker run nginx
+	 
+1.2--> docker run -p 8080:80 nginx
+       --> hostport:containerport matlb nginx ka container 80 pe expose kar rha apana result aur woh bhi container environment ke andar,
+	   then tumhare local computer ke 8080 port se usko match kara diya taki tum browser se localhost:8080 pe nginx ko access kar paoo
+	   note- bina port mapping ke agar conatiner run bhi ho rha tab bhi tumhe localhost:8080 pe kuch nhi milta
+	   
+	   
+1.3--> docker run -d -p 8080:80 nginx
+       --> detach mode me run ho rha matlb tumhare terminal ko pura occupy nhi kar rha, phle toh pura terminal wohi containner occupy kar leraha tha
+	   aur apane logs dikha rha tha powershell pe
+
+	   
+1.4--> docker run -d --name my-nginx -p 8080:80 nginx
+       --> naam dediya container ka jo nginx image se run kar rha uska 
+	   note- container name hamesha unique hona chahiye (tumhare wale contaniers running walo me) docker stop my-nginx
+	   
+1.5--> docker stop my-nginx
+       --> for stopping the running container,my-nginx container ko stop kardiya
+	   
+	   
+1.6--> docker run -d --name my-nginx -p 8080:80 nginx
+       docker run -d --name my-nginx-new -p 8081:80 nginx
+	   docker run -d --name my-nginx-new2 -p 8082:80 nginx
+	   Multiple contaniers run kar rhe single image se woh bhi alag alag ports pe, ab localhost:8080,localhost:8081, localhost:8082 tino pe access kar sakte nginx
+	   
+	   
+1.7--> docker pull embarkx/hello-spring:latest
+       --> latest version ka naam hai yaha version daal sakte bydefault latest hi uthata, toh nhi bhi mention karenge toh latest hi uthayega par specific version bhi daal sakte
+	   
+	   example- docker pull embarkx/hello-spring, docker pull embarkx/hello-spring:latest, docker pull embarkx/hello-spring:1.0.11, docker pull embarkx/hello-spring:l.0.13
+	   
+1.8--> docker run -p 8080:8080 embarkx/hello-spring
+       --> running the container without mentioning container name, neither in detach mode means it will occupy whole terminal, neither mentioning the version so it will pick the
+	   latest one. ab localhost:8080 pe access karsakte hello-spring ka response kyuki uski container ka 8080 humne apane computer ke 8080 ke match kara liya hai
+	   
+	   
+1.9--> docker run    VS     docker pull
+	   --> run phle check karega woh image hai ya nhi locally hai then uska container up kardega, warna pull karega then uska container up karega,
+	   pull sirf pull karega image 
+	   
+	   
+	   
+	   
+LifeCycle Docker -->>
+
+1.1--> docker ps
+       --> yeh sare running container show kardega with his container id and image id and all stuff details
+	   
+1.2--> docker stop container_id 
+       --> stop kardega running container of the same id
+	   example- docker stop 581df86228b8
+	   
+1.3-->  docker create --name app1 -p 8080:8080 embarkx/hello-spring
+       --> it will only create a contanier name= app1 from hello-spring image.
+	   note- not running contanier this time 
+	   
+1.4--> docker start app1
+	   --> run kardega app1 contanier ko
+	   
+
+1.5--> difference between docker run VS docker start
+       --> docker run hamesha naya contanier bana ke usko running kardeta kisi image se, wahi docker start kisi already created container ko run karne ke kaam aata
+	   
+	   
+1.6--> docker stop app1
+       --> stop kardega app1 container ko
+	   
+1.7--> docker restart app1
+       --> restart kardega same app1 container ko
+	   
+1.8--> docker rm app1
+       --> remove kardega app1 container ko
+	   note- stoped container hi remove hoga, running container ko phle stop karna hoga then remove command chalayenge
+	   
+	   
+	   
+	   
+Logging/Viewing Inside the container -->>
+
+1.1--> docker logs container_id
+       example- docker logs 93721a40fa981145c5cf41c9ead749b5a512417c3f2055753fe9674f291e376e, docker logs 93721a, docker logs 93, docker logs 937
+	   note- container_id ka starting shorter portion bhi le sakte par basarte us id ka shorter portion kisi aur id se match na horha ho,
+	   bus logs check kar rhe us running conatiner ka
+	   
+1.1--> docker logs container_id --tail 10
+		example- docker logs 93721a40 --tail 10
+		bus logs check kar rhe us running conatiner ka aur yaha bus 10 lines last ke milenge
+		
+1.1--> docker logs --since 10m conatiner_Id
+		example- docker logs -since 10m 93721a40
+		bus logs check kar rhe us running conatiner ka aur yaha bus last 10 minutes ke logs dikhenge
+		
+1.2--> docker logs conatiner_Name
+       example- docker logs app1, docker logs my-nginx-new
+	   bus logs check kar rhe us running conatiner ka
+	   
+1.3--> docker logs  -f conatiner_Name
+       example- docker logs -f my-nginx-new
+	   bus logs check kar rhe us running conatiner ka LIVE LOGS
+	   
+	   
+1.4-->docker exec -it container_id sh
+      example- docker exec -it 93721a40fa981145c5cf41c9ead749b5a512417c3f2055753fe9674f291e376e sh, docker exec -it 93721 sh
+	  
+	  ENTERING INSIDE THE CONTAINER, ab inside the container kuch bhi execute karan toh ab commands run karke kar sakte
+	  
+1.4-->docker exec -it container_id bash
+      example- docker exec -it 93721 bash
+	  
+	  ENTERING INSIDE THE CONTAINER, ab inside the container kuch bhi execute karan toh ab commands run karke kar sakte, bash Gitbash terminal me huye then use karo
+	  
+1.5 --> then inside the container run-->> ls   or  run-->>  java --version
+        then for exit --> exit 
+		
+		
+		
+Important Docker Commands
+
+1.1--> docker pull embarkx/hello-spring:latest
+       --> it will pull the image
+	   
+1.2--> docker images
+       --> it will give list of all images 
+	   
+1.3--> docker rmi Image_ID
+       --> it will remove image of given image_ID
+	   
+1.4--> docker create --name new_ngnix nginx
+       --> it will create new container named new_ngnix
+	   
+1.5--> docker ps
+       --> it will give details of all images/Containers
+	   
+1.6--> docker start new_ngnix
+       --> it will run the conatiner, new_ngnix ko run kardega jo ki already created tha
+	   
+1.7--> docker run -it nginx
+       --> pure terminal pe run kardega new running container from nginx image logs ke sath
+	   
+1.8--> docker rm app1
+       --> remove kardega app1 container ko
+	   note- stoped container hi remove hoga, running container ko phle stop karna hoga then remove command chalayenge
+	   
+1.9--> docker rm -f conatiner_Id or docker rm -f conatiner_Name
+       --> remove kardega mentioned conatiner ko
+	   yaha -f, force fully running container ko bhi remove kardega
+		 
+      
+
+	   
+	   
+	    
+	   
+
+

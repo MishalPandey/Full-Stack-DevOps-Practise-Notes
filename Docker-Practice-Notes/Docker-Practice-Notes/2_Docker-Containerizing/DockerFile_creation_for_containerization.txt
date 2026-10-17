@@ -1,0 +1,139 @@
+Containerizing & Running Spring Boot App   -->>
+
+1.1--> Create a Spring Boot Hello App
+
+1.2--> .\gradlew.bat clean build
+        --> to create build/libs/*.jar file
+		
+1.3--> create a dockerfile in hello-spring project
+
+1.4--> docker build -t mishalpandey/hello-spring .
+       -->open powershell and run above command it will build an image locally on your dockerhub account
+	   
+1.5--> docker images
+       --> you can see your images and new image which you have created mishalpandey/hello-spring
+
+1.6--> docker run -d --name hello-spring -p 8080:8080 mishalpandey/hello-spring
+       --> it will run the image in detach mode mishalpandey/hello-spring image as named hello-spring and port mapping at 8080 from 8080 of image
+	   --> you can check at http://localhost:8080/
+	       you will see this output {
+									  "message": "Hello from Simple App (Spring Boot)",
+									  "env": "No env set",
+									  "container": "4a07e361ae25"
+									}
+           as your container id as 4a07e361ae2515b4478b31b8ddcb8b36a95527730185f50e72b84b3a98e8bb55 you can see at your dockerhub account as well same 
+		   image running
+		   
+1.7--> docker logs 4a07e361ae
+       --> you can check your logs
+	   
+1.8--> docker login
+       --> login with hour dockerhub account credential
+    
+1.9--> docker push mishalpandey/hello-spring
+       docker push mishalpandey/hello-spring:latest
+	   docker push mishalpandey/hello-spring:v1
+	   docker push mishalpandey/hello-spring:v2
+       --> it will push your image to remote server at your dockerhub account
+	   
+	  
+
+	  
+USE .dockerignore  -->>
+
+1.1--> mkdir logs
+       --> I am creating a logs folder under my springboot hello-spring project
+	   
+1.2--> echo "junk" > logs/app.log
+       --> Added an app.log file with having text under it (junk) into logs folder
+	   
+1.3--> .\gradlew.bat clean build
+       --> creating a jar file
+	 
+1.4--> docker build -t spring-hello-no-ignore .
+       --> creating/build an image locally on your dockerhub account without dockerignore
+	   
+1.5--> docker run -it --rm spring-hello-no-ignore sh
+       --> running the image spring-hello-no-ignore means creating running container, abhi without .dockerignore file ke run kar rhe, aur --rm matlb jabhi container stop ho es image ka delete kardo container ko
+	   --> -it with sh means running continer ke andar terminal kholdo
+	   --> you can see files with ls, do exist via exit command because you are under running conatiner's terminal
+	   --> you will see app.jar only via ls command under running container because in the dockerfile you are explicitely mentioned to just copy app.jar only
+	   --> that does means .dockerignore file is not useful
+	   
+1.6--> create a .dockerignore file
+
+1.7--> docker build -t spring-hello-with-ignore .
+
+1.8--> docker run -it --rm spring-hello-no-ignore sh
+       --> you will not see much diffence here with for the larger application if text files are large, unsefull contents are large then definetaly the 
+	       container size will be lesser running timw will be faster and efficient to use .dockerignore
+		   
+		   
+		   
+
+USE Environment Variable in Container -->>
+
+at RunTime we need some varibale so giving env values via terminal -->>
+
+
+
+1.1--> docker run -p 8080:8080 -e ENV_VALUE="qa" mishalpandey/hello-spring
+       docker run -d --name "hello-spring-qa" -p 8080:8080 -e ENV_VALUE="qa" mishalpandey/hello-spring
+
+	   --> you are running your image with ENV_VALUE as qa
+	   --> you can the output now http://localhost:8080/ 
+														{
+														  "env": "qa",
+														  "container": "266dfa895d6c",
+														  "message": "Hello from Simple App (Spring Boot)"
+														}
+														
+1.2--> docker ps
+       --> check all the images and containers at your account
+	   
+
+1.3--> docker exec -it hello-spring-qa printenv ENV_VALUE
+		or
+	   docker exec -it hello-spring-qa sh
+	   printenv ENV_VALUE
+	   
+	   --> you can debug whatever 
+	   
+	   
+	   
+at RunTime we need some varibale so giving env values via .env files   -->> 
+	   
+	   
+1.3.1--> 2nd Approach
+       Add an .env file in your springboot application and add the env value in that file 
+	   like ENV_VALUE="Running in Docker"
+	   
+1.3.2--> docker run -d --name "hello-spring-qa-new" -p 8081:8080 --env-file .env mishalpandey/hello-spring
+         --> it will take the env values from .env file
+		 --> you can see the output now http://localhost:8081/ 
+															{
+															  "message": "Hello from Simple App (Spring Boot)",
+															  "container": "b16b2c167cc5",
+															  "env": "Running in Docker via env file"
+															}
+
+
+at RunTime we need some varibale so giving env values via .env files and teminal both then terminal values will be picked up on priority  -->> 
+
+
+
+1.3-->  docker run -d --name "hello-spring-mixed" -p 8082:8080 --env-file .env -e ENV_VALUE="Running in Docker -e option" mishalpandey/hello-spring
+        --> teminal env value will be picked up means Running in Docker -e option will be shown
+		--> you can see the output now http://localhost:8082/ 
+															{
+															  "message": "Hello from Simple App (Spring Boot)",
+															  "container": "3f76ab1e92798c",
+															  "env": "Running in Docker -e option"
+															}
+		
+
+	   
+
+
+	   
+	   
