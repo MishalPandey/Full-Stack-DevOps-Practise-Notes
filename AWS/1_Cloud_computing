@@ -553,37 +553,480 @@
 
 		
 
+47--> Networking in AWS 
 
 
 
+                         INTERNET
+                            |
+                   +------------------+
+                   | Internet Gateway |
+                   |      (IGW)       |
+                   +------------------+
+                            |
+        +------------------------------------------+
+        |                  AWS VPC                 |
+        |            CIDR: 10.0.0.0/16             |
+        |                                          |
+        |  +------------------------------------+  |
+        |  | PUBLIC SUBNET: 10.0.1.0/24         |  |
+        |  |                                    |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | Route Table                 |   |  |
+        |  |  | 0.0.0.0/0 -> IGW            |   |  |
+        |  |  +-----------------------------+   |  |
+        |  |                |                   |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | Security Group              |   |  |
+        |  |  | Allow HTTP 80 / HTTPS 443   |   |  |
+        |  |  +-----------------------------+   |  |
+        |  |                |                   |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | EC2: Web Server             |   |  |
+        |  |  +-----------------------------+   |  |
+        |  |                |                   |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | NAT Gateway                 |   |  |
+        |  |  +-----------------------------+   |  |
+        |  +------------------------------------+  |
+        |                  |                       |
+        |  +------------------------------------+  |
+        |  | PRIVATE SUBNET: 10.0.2.0/24        |  |
+        |  |                                    |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | Route Table                 |   |  |
+        |  |  | 0.0.0.0/0 -> NAT Gateway    |   |  |
+        |  |  +-----------------------------+   |  |
+        |  |                |                   |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | EC2: Backend Application    |   |  |
+        |  |  +-----------------------------+   |  |
+        |  |                |                   |  |
+        |  |  +-----------------------------+   |  |
+        |  |  | RDS: PostgreSQL Database    |   |  |
+        |  |  | Port: 5432                  |   |  |
+        |  |  +-----------------------------+   |  |
+        |  +------------------------------------+  |
+        |                                          |
+        +------------------------------------------+
+		
+		How everything works together
+		
+		1. VPC + CIDR: Create your private AWS network with the IP range 10.0.0.0/16.
+		2. Subnets: Divide the VPC into public and private subnets with separate CIDR ranges.
+		3. IGW: Provides an internet route for public-facing resources that have the required public IP configuration.
+		4. NAT Gateway: Allows private-subnet resources to initiate outbound internet connections.
+		5. Route Tables: Direct traffic to the local VPC network, IGW, or NAT Gateway.
+		6. Security Groups: Control which ports and sources can access EC2 and RDS resources.
+		7. Note: NAT Gateway → Located in the Public Subnet.
+		
+		Important: In a real AWS setup, the NAT Gateway must be in a public subnet with a route to the IGW. 
+		           The private subnet's route table points to the NAT Gateway. 
+		           The RDS Security Group should allow PostgreSQL port 5432 from the backend EC2's Security Group, not from the entire internet.
+				   
+				   
+
+
+48--> Create a VPC in AWS
+      --> Create a VPC named `test-project-vpc` and configure its CIDR block, public and private subnets, Internet Gateway (IGW), NAT Gateway, Route Tables, and Security Groups.
+
+49--> Use a Custom VPC for EC2
+	  --> Whenever you create an EC2 instance, you can select your custom VPC (`test-project-vpc`) instead of the default VPC.
+	  -->  Select the appropriate subnet and Security Group according to your requirements.
+
+
+50--> AWS Command Line Interface
+      --> Install the AWS CLI via MSI installer
+	  --> https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+	  --> run: aws help
+	  --> run: aws --version 
+	      --> to verify the installation
+		  
+	  -->Connect your aws CLI to your aws account.
+	     -->run: aws s3 ls
+				 aws: [ERROR]: An error occurred (NoCredentials): Unable to locate credentials. You can configure credentials by running "aws login".
+				 
+	 
+	  --> Create Access Keys After creating an IAM users From IAM User-> Security Creadentials -> access keys
+	  --> run: aws configure
+				AWS Access Key ID [None]: Give your created access key id 
+				AWS Secret Access Key [None]: Give your Secret access key 
+				Default region name [None]: ap-south-1
+				Default output format [None]: json
+	  -->run: aws s3 ls
+			  s: [ERROR]: An error occurred (AccessDenied) when calling the ListBuckets operation: User: arn:aws:iam::009908806602:user/pandeym is not authorized to perform: s3:ListAllMyBuckets because no identity-based policy allows the s3:ListAllMyBuckets action
+              
+			  so because this user does not have access of S3 Buckets to access, its giving error so Add policy on this user for S3 Buckets Access
+			  Policiy- 
+					
+					
+					{
+					  "Version": "2012-10-17",
+					  "Statement": [
+						{
+						  "Effect": "Allow",
+						  "Action": [
+							"s3:ListAllMyBuckets",
+							"s3:CreateBucket",
+							"s3:DeleteBucket"
+						  ],
+						  "Resource": "*"
+						}
+					  ]
+					}
+
+					
+	  -->run: aws s3 ls
+            output: you will not get anything means nothing is there in your aws account no error means you have connected to your aws accound succcessfully.
+			
+	  -->run: aws s3 mb s3://test-06082002-s3-demo-bucket --region ap-south-1
+            make_bucket: test-06082002-s3-demo-bucket
+			
+	  -->run: aws s3 ls
+           2026-10-18 16:49:13 test-06082002-s3-demo-bucket
+			
+			
+			
+51--> USE aws CLI and Create key-pair.
+      -->before running the command give your IAM user access of key-pair creation.
+			{
+			  "Version": "2012-10-17",
+			  "Statement": [
+				{
+				  "Effect": "Allow",
+				  "Action": [
+					"ec2:CreateKeyPair",
+					"ec2:DescribeKeyPairs"
+				  ],
+				  "Resource": "arn:aws:ec2:ap-south-1:009908806602:key-pair/MyKeyPair"
+				}
+			  ]
+			}
+			
+     -->run: aws ec2 create-key-pair --key-name MyKeyPair --query 'KeyMaterial' --output text | out-file -encoding ascii -filepath MyKeyPair.pem
+	 -->run: ls
+	    output: you will see MyKeyPair will get created.
+		
+		
+52--> USE aws CLI and create EC2 instance
+	   -->before running the command give your IAM user access of EC2 creation.
+			{
+			  "Version": "2012-10-17",
+			  "Statement": [
+				{
+				  "Sid": "EC2FullAccess",
+				  "Effect": "Allow",
+				  "Action": "ec2:*",
+				  "Resource": "*"
+				}
+			  ]
+			}
+	   --> get a valid subnet-id
+	       run:  aws ec2 describe-subnets --query "Subnets[*].[SubnetId,VpcId,AvailabilityZone,State]" --output table --region ap-south-1
+		   output:
+			-----------------------------------------------------------------------------------
+			|                                 DescribeSubnets                                 |
+			+---------------------------+-------------------------+--------------+------------+
+			|  subnet-07cd2e7b74e01192e |  vpc-0e96474648aceb177  |  ap-south-1a |  available |
+			|  subnet-018c7fad1fd7f2866 |  vpc-0e96474648aceb177  |  ap-south-1b |  available |
+			|  subnet-01cbccc04e30b8ca4 |  vpc-0e96474648aceb177  |  ap-south-1c |  available |
+			+---------------------------+-------------------------+--------------+------------+
+			
+		
+	   --> get a valid security group
+		   run: aws ec2 describe-security-groups --query "SecurityGroups[*].[GroupId,GroupName,VpcId]" --output table --region ap-south-1
+		   output:
+			--------------------------------------------------------------
+			|                   DescribeSecurityGroups                   |
+			+-----------------------+----------+-------------------------+
+			|  sg-0a4d432bb6def8b32 |  default |  vpc-0e96474648aceb177  |
+			+-----------------------+----------+-------------------------+
+		
+				
+					
+	   --> get a valid aws image-id
+	       run:  aws ec2 describe-images --owners amazon --filters "Name=state,Values=available" --query "reverse(sort_by(Images,&CreationDate))[].[ImageId,Name,CreationDate]" --output table --region ap-south-1
+		   
+		   Output:
+			------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			|                                                                                  DescribeImages                                                                                  |
+			+-----------------------+-----------------------------------------------------------------------------------------------------------------------------+----------------------------+
+			|  ami-09eb1449a48eced93|  debian-13-backports-amd64-20261019-2636                                                                                    |  2026-10-19T12:10:02.000Z  |
+			|  ami-0a7e1bc6cddceb2a4|  debian-13-backports-arm64-20261019-2636                                                                                    |  2026-10-19T12:08:54.000Z  |
+			|  ami-05f0fd4b619e44a42|  AgentCore Runtime Instances Linux x86-64 GPU 2026-10-19T09-25-58.955Z                                                      |  2026-10-19T09:39:25.000Z  |
+			|  ami-0b9a5034654c01e23|  AgentCore Runtime Instances Linux x86-64 2026-10-19T09-25-58.434Z                                                          |  2026-10-19T09:32:04.000Z  |
+			
+			
+	   --> create an EC2 instance with using subnet-id, image-id, security-group from the above CLI commands or you can get the same via asw account Screen.
+	       run: aws ec2 run-instances --image-id ami-01a00762f46d584a1 --count 1 --instance-type t3.micro --key-name MyKeyPair --security-group-ids  sg-0a4d432bb6def8b32 --subnet-id subnet-07cd2e7b74e01192e
+           output: created ec2 instance with all the details in json.
+		   
+	   --> to get details of an EC2 instance
+	       run: aws ec2 describe-instances
+		   
+	   --> to get an instance id
+	       run: aws ec2 describe-instances --filters "Name=instance-type,Values=t3.micro" --query "Reservations[].Instances[].InstanceId"
+		   output:
+					[
+						"i-08b3067c092cb0593"
+					]
+					
+	   --> terminate the instance with instance id.
+	       run: aws ec2 terminate-instances --instance-ids i-08b3067c092cb0593
+		   output: {
+						"TerminatingInstances": [
+							{
+								"InstanceId": "i-08b3067c092cb0593",
+								"CurrentState": {
+									"Code": 32,
+									"Name": "shutting-down"
+								},
+								"PreviousState": {
+									"Code": 16,
+									"Name": "running"
+								}
+							}
+						]
+					}
+
+
+53--> USE aws CLI and play with IAM create users and permision and all.
+      --> play with command and you can take refrence from here Document link- https://docs.aws.amazon.com/cli/latest/userguide/cli-services-iam.html
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+	  
+54--> Introduction to AWS Serverless Computing.
+
+55--> What is AWS Serverless?
+	  -->AWS Serverless is a cloud computing model where AWS manages the underlying servers, operating system, and much of the infrastructure, 
+	     so developers can focus on writing and running code.
+        
+		 Serverless does not mean that servers don't exist. It means you don't need to manage them directly.
+		 
+56--> Serverless as renting a house vs. staying in a hotel
+      -->
+		Traditional server = Renting a house
+		You rent a house and manage many things yourself, such as maintenance, electricity, and repairs. 
+		Similarly, with a traditional server or EC2 instance, you manage the operating system, updates, software, and server capacity.
+
+		Serverless = Staying in a hotel
+		The hotel manages the building, cleaning, and maintenance. You focus on your stay and pay for the service you use. 
+		Similarly, AWS manages the underlying infrastructure, while you focus on your application code.
+
+
+57--> Traditional Server (EC2 instance) vs Serverless (AWS Lamda)
+      -->
+		Feature: Server Management
+		EC2: You manage the instance
+		Serverless (Lambda): AWS manages infrastructure
+
+		Feature: Scaling
+		EC2: You configure or automate scaling
+		Serverless (Lambda): Automatically scales
+
+		Feature: Billing
+		EC2: Instance running time
+		Serverless (Lambda): Requests and execution duration
+
+		Feature: Maintenance
+		EC2: More responsibility
+		Serverless (Lambda): Less infrastructure management
+
+		Feature: Best For
+		EC2: Long-running applications
+		Serverless (Lambda): Event-driven tasks
+
+		Note:
+		- EC2 can also scale automatically using Auto Scaling.
+		- Serverless applications may incur costs from other AWS services even when Lambda is not running.
+		
+		
+
+58--> What is AWS Lambda?
+      -->
+		AWS Lambda is a serverless compute service that runs code automatically
+		when triggered by an event, without requiring you to manage servers.
+
+		How Lambda Works:
+		1. Trigger/Event: A file is uploaded to Amazon S3.
+		2. AWS Lambda: Runs the code automatically.
+		3. Action: Resizes the image or processes the file.
+
+		Key Points:
+		- Service Type: Serverless Compute (Function as a Service - FaaS).
+		- Languages: Java, Python, Node.js, and others.
+		- Triggers: API Gateway, S3, SQS, EventBridge, etc.
+		- Scaling: Automatically scales based on incoming requests.
+		- Pricing: Pay per request and execution duration.
+		- Execution Limit: Up to 15 minutes per standard function invocation.
+		- Use Cases: File processing, API backends, scheduled jobs, automation,
+		  and event-driven applications.
+
+		Example:
+		When a customer places an order, Lambda can automatically send an
+		order confirmation or process an event without requiring a dedicated
+			server for that task.
+    
+
+59--> Create Lamda Function and play with them.
+      --> You can create an Event Function with Nodejs Code
+	  
+				console.log('Loading function');
+				export const handler = async (event, context) => {
+					
+					return {
+						statusCode: 200,
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							message: 'Hello World',
+						}),
+					}
+				};
+				
+	  --> Then Create an url to access this endpoint from your local browser.
+	      you can create from Configuration -> Function Url
+		  
+		  https://ddbpkrrrorfkp7zwkitskwsro40uztdq.lambda-url.ap-south-1.on.aws/ 
+		  You can use this url and hit from you Bruno as well.
+		  
+	  --> ES url https://ddbpkrrrorfkp7zwkitskwsro40uztdq.lambda-url.ap-south-1.on.aws/  me authentication ke liye jada kuch hai nhi yaha so for authentication we have API GATEWAY.
+	  
+60--> API GATEWAY ??
+      --> Yaha API's create kar sakte aur lamda function ko map kar sakte so hum ek API create karenge yaha aur created lambda function se attach kara denge es API ko then we will get the same response,
+	      Also yaha naming of api me assani hogi /, /lead-time, /contact with the same url api's create kar sakte then hum un sab ke accordingly apane apane lambda function se attach kara denge. 
+		  
+	
 
 
 
+61--> Bruno → API Gateway → AWS Lambda Flow
 
+			1. Bruno (API Client)
+			   - Sends HTTP requests (GET, POST, PUT, DELETE).
+			   - Used to test APIs.
 
+			2. Amazon API Gateway
+			   - Receives HTTP requests from Bruno.
+			   - Routes requests to the appropriate Lambda function.
+			   - Acts as the entry point for the API.
 
+			3. AWS Lambda
+			   - Executes backend code automatically.
+			   - Processes the request and performs business logic.
+			   - Returns a response.
 
+			4. Database (Optional)
+			   - Lambda can read or write data.
+			   - Example: Amazon DynamoDB or Amazon RDS.
 
+			Request Flow:
+			Bruno → API Gateway → Lambda → Database (Optional)
 
+			Response Flow:
+			Database (Optional) → Lambda → API Gateway → Bruno
 
+			Example:
+			1. Create a Lambda function that returns a JSON response.
+			2. Configure API Gateway to invoke the Lambda function.
+			3. Deploy the API and copy its Invoke URL.
+			4. Open Bruno and create a GET request.
+			5. Enter the API Gateway URL and click Send.
+			6. Bruno displays the response returned by Lambda.
 
+			Example API URL:
+			https://your-api-id.execute-api.ap-south-1.amazonaws.com/hello
 
+			Example Response:
+			{
+			  "message": "Hello from AWS Lambda!"
+			}
 
+			Key Points:
+			- Bruno: API testing client.
+			- API Gateway: API entry point and request router.
+			- AWS Lambda: Executes backend business logic.
+			- Database: Stores application data if required.
 
+			Note:
+			API Gateway must be configured and deployed, and it must have
+			permission to invoke the Lambda function.
+			
 
+62--> AWS Toolkit Overview
+      --> AWS VS CODE directly attach karne ka option deta wahi Lamda Function creation ke time pe aur waha se 
+	      VS CODE connect karke push and deploy kar sakte directly changes or manually ZIP file me convert karke apne whole FOlder ko UPLOAD bhi karsakte Screen se.
+		  
+63--> Check Lamda Dashboard
+      -->AWS Lambda Dashboard – Screen Options
 
+				1. Code:
+				   Write, edit, and deploy Lambda function code.
 
+				2. Test:
+				   Run the function with a test event to check its output.
 
+				3. Monitor:
+				   View metrics, logs, errors, and execution duration.
 
+				4. Configuration:
+				   Manage function settings such as memory, timeout, environment
+				   variables, permissions, and networking.
 
+				5. Code Signing:
+				   Verify that deployed code packages are signed by trusted publishers.
 
+				6. Triggers:
+				   Configure services or events that invoke the Lambda function.
 
+				7. Destinations:
+				   Send the results of asynchronous function invocations to another
+				   AWS service.
 
+				8. Function URL:
+				   Provide an HTTPS endpoint to invoke the Lambda function directly.
 
+				9. Versions:
+				   Publish immutable snapshots of function code and configuration.
 
+				10. Aliases:
+					Create names such as dev, test, and prod that point to function versions.
 
+				11. Layers:
+					Share libraries, dependencies, and custom runtimes across functions.
 
+				12. Event Source Mapping:
+					Connect event sources such as SQS, Kinesis, and DynamoDB Streams
+					to Lambda so it can poll for events and process records.
 
+				13. Tags:
+					Add key-value labels to organize and identify AWS resources.
+
+				14. Environment Variables:
+					Store configuration values used by your function at runtime.
+
+				15. Permissions:
+					Control which AWS services and users can invoke or access the function.
+
+				16. Concurrency:
+					Control how many instances of the function can execute simultaneously.
+
+				17. Asynchronous Invocation:
+					Configure retry behavior and handling for events processed asynchronously.
 
 
 
