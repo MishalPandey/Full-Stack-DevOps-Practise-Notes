@@ -635,6 +635,19 @@
 	  -->  Select the appropriate subnet and Security Group according to your requirements.
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 50--> AWS Command Line Interface
       --> Install the AWS CLI via MSI installer
 	  --> https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html

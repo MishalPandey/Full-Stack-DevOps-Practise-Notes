@@ -1,0 +1,344 @@
+Docker in AWS
+
+
+
+
+
+
+
+
+1--> Docker
+     -->Packages an application with all its dependencies into a container so it runs consistently on different systems.
+
+2--> AWS ECR (Elastic Container Registry)
+     --> Stores Docker images in AWS so they can be accessed and used for deployment. 
+	     Just like DockerHub its a Docker container registry on AWS.
+		 
+3--> AWS ECS (Elastic Container Service)
+     --> A container orchestration service that deploys, manages, and scales Docker containers on AWS.
+         Just like DockerDestop Kubernetes It can run containers using AWS Fargate or EC2 instances.
+
+3--> AWS Fargate
+     --> Runs containers without needing to manage servers. AWS handles the underlying infrastructure.
+	 
+	 
+	 
+	 
+	 
+	 
+4--> AWS ECR
+    -->
+	
+	-->1. Create an nginx-sample named repository in AWS ECR
+	-->2. Inside nginx-sample -> check Push commands for nginx-sample
+	-->3. Add permission(Policy for your IAM User) to Authenticate/connect your Local powershell to AWS ECR's nginx-sample
+				
+				{
+				  "Version": "2012-10-17",
+				  "Statement": [
+					{
+					  "Sid": "ECRAuthorizationToken",
+					  "Effect": "Allow",
+					  "Action": [
+						"ecr:GetAuthorizationToken"
+					  ],
+					  "Resource": "*"
+					},
+					{
+					  "Sid": "ECRImageOperations",
+					  "Effect": "Allow",
+					  "Action": [
+						"ecr:BatchCheckLayerAvailability",
+						"ecr:CompleteLayerUpload",
+						"ecr:InitiateLayerUpload",
+						"ecr:PutImage",
+						"ecr:UploadLayerPart",
+						"ecr:BatchGetImage",
+						"ecr:GetDownloadUrlForLayer"
+					  ],
+					  "Resource": "*"
+					}
+				  ]
+				}
+				
+    -->4. TO LOGIN your IAM User on local powershell to connect AWS ECR
+          run: aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 009908806602.dkr.ecr.ap-south-1.amazonaws.com
+	      output: Login Succeeded
+	-->5. Pull ngnix image into your DockerDestop, run below command on your powershell
+	      run: docker pull nginx:latest
+		  
+	-->6. Tag your image so you can push the image to this repository:
+	      run: docker tag nginx-sample:latest 009908806602.dkr.ecr.ap-south-1.amazonaws.com/nginx-sample:latest
+		  docker tag nginx:latest 009908806602.dkr.ecr.ap-south-1.amazonaws.com/nginx-sample:latest  (Because your local image is nginx not nginx-sample so rename the tag name)
+		  
+	-->7. Run the following command to push this image to your newly created AWS repository:
+	      run: docker push 009908806602.dkr.ecr.ap-south-1.amazonaws.com/nginx-sample:latest
+		  
+
+
+
+5--> AWS ECS
+     -->
+	 
+	 -->1. run your nginx image uploaded at AWS ECR named as nginx-sample in its repository.
+	 -->2. create a Cluster at AWS ECS
+	 -->3. Open AWS ECR-> Task definitions and create a task named nginx-task with the image from AWS ECS, your's is ngnix.
+	 -->4. Add services on your cluster you can add the same task, nginx-task here which you have created in step 3.
+	 -->5. You can take the public IP from your TASK's configuration that is 3.108.237.134 and search from your local browser http://3.108.237.134/  
+	       -->Output: you can see nginx page, if not able to see the nginx Home Page then update your used securityGroup here so that URL can be accessed by anyone.
+		   
+		   
+		   
+		   
+		   
+		   
+		 
+
+
+		 
+		   
+Kubernetes in Cloud
+
+
+
+
+
+
+
+
+
+
+1--> Kubernetes in Cloud via
+     --> Amazon Elastic Kubernetes Service (EKS)
+	 --> Google Kubernetes Engine (GKE)
+	 --> Azure Kubernetes Service (AKS)
+	 
+	 
+2--> Kubernetes on AWS 
+     --> Means running Kubernetes using AWS infrastructure instead of your own servers.
+     --> AWS provides a managed Kubernetes service called Amazon Elastic Kubernetes Service (EKS)
+	 --> AWS runs the Kubernetes control plane for you
+	 --> AWS handle availability, upgrades, security of K8s itself
+	 
+	 
+
+3--> Why not run Kubernetes yourself?
+     --> Running Kubernetes Yourself = High Operational burden.
+	 
+4--> Kubernetes on AWS
+     -->     
+	 Your App(Container) ----> Kubernetes (EKS)  -----> AWS Infrastructure
+	 you talk to kubernetes    Kubernetes talks to AWS    AWS runs everything using its infrastructure (EC2, Networking, Load Balancers)
+	 
+    Keys AWS services involved
+     Amazon EC2
+	 --> virtual machines where your container actually run
+	 
+	 Amazon VPC
+	 --> Private network for your cluster
+	 
+	 AWS IAM
+	 --> Who can access what (Security)
+	 
+	 Elastic Load Balancing
+	 -->Exposes your app to the internet
+	 
+	 MATLB KYA HOYEGA KI HUM Kubernetes Se baat karenge aur behind the seen woh AWS ke resources use karega jaise woh khud EC2 instance create karelga
+	 Baki chinze like VPC load balancer woh AWS ka use karke banayega hum bus kubernetes se baat karenge.
+	 
+	 
+5--> AWS Manage VS You Manage
+     --> AWS Manage
+	     1. Kubernetes API servers
+		 2. etcd (cluster data)
+		 3. High availability (multi- AZ)
+		 4. Control plane security & patches
+		 5. And more....
+		 
+	 --> You Manage
+	     1. Your application containers
+		 2.Kubernetes configs (Deployments, Services, etc.)
+		 
+6--> Things to know
+     --> Kubernetes is not AWS-specific
+	 
+	 ALL THIS ARE PRESENT IN NOTES PDF.
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+7--> AWS EKS
+     --> Check Amazon Elastic Kubernetes Service
+	 
+8--> EKSCTL Tool
+     --> Check https://docs.aws.amazon.com/eks/latest/eksctl/what-is-eksctl.html
+	 
+	 -->eksctl is a command-line tool used to create and manage Kubernetes clusters on AWS EKS (Elastic Kubernetes Service). 
+	    It automates many AWS configuration steps that you would otherwise perform manually. 
+		
+		1. Why do we need eksctl?
+		Without eksctl, you may need to configure multiple AWS resources manually, including the EKS cluster, networking, IAM roles, and worker nodes.
+		With eksctl, you can create a cluster using a single command.
+		
+		2. run: eksctl create cluster
+        This creates an EKS cluster using default settings, subject to your AWS permissions, quotas, and available resources.
+
+9--> Installation of EKSCTL
+	 
+	 --> Install using chocolatey 
+	 --> Install chocolatey  via  Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+     --> run: choco --version
+	 --> For now eksctl installation using choco run: choco install eksctl -y
+	 --> eksctl version
+	 
+10--> Create your First Cluster in Amazon EKS (Not via Screen but will EKSCTL Tool or we can say command line)
+
+     --> Add required permission for pandeym in IAM and then
+					{
+						"Version": "2012-10-17",
+						"Statement": [
+							{
+								"Effect": "Allow",
+								"Action": "eks:*",
+								"Resource": "*"
+							},
+							{
+								"Effect": "Allow",
+								"Action": [
+									"ssm:GetParameter",
+									"ssm:GetParameters"
+								],
+								"Resource": [
+									"arn:aws:ssm:*:009908806602:parameter/aws/*",
+									"arn:aws:ssm:*::parameter/aws/*"
+								]
+							},
+							{
+								"Effect": "Allow",
+								"Action": [
+									"kms:CreateGrant",
+									"kms:DescribeKey"
+								],
+								"Resource": "*"
+							},
+							{
+								"Effect": "Allow",
+								"Action": "logs:PutRetentionPolicy",
+								"Resource": "*"
+							},
+							{
+								"Effect": "Allow",
+								"Action": "iam:CreateServiceLinkedRole",
+								"Resource": "*",
+								"Condition": {
+									"StringEquals": {
+										"iam:AWSServiceName": [
+											"eks.amazonaws.com",
+											"eks-nodegroup.amazonaws.com",
+											"eks-fargate.amazonaws.com",
+											"autoscaling.amazonaws.com",
+											"ec2scheduled.amazonaws.com",
+											"elasticloadbalancing.amazonaws.com",
+											"spot.amazonaws.com",
+											"spotfleet.amazonaws.com",
+											"transitgateway.amazonaws.com"
+										]
+									}
+								}
+							},
+							{
+								"Effect": "Allow",
+								"Action": "cloudformation:*",
+								"Resource": "*"
+							}
+						]
+					}
+					
+					And
+					
+					{
+						"Version": "2012-10-17",
+						"Statement": [
+							{
+								"Effect": "Allow",
+								"Action": [
+									"eks:*",
+									"ec2:*",
+									"cloudformation:*",
+									"iam:*",
+									"ssm:GetParameter",
+									"ssm:GetParameters",
+									"kms:DescribeKey",
+									"kms:CreateGrant",
+									"logs:PutRetentionPolicy"
+								],
+								"Resource": "*"
+							}
+						]
+					}
+					
+	 --> run: eksctl create cluster --name hello-cluster --region ap-south-1 --nodes 2
+	 
+	 
+	 
+11--> run: kubectl get all
+      output:
+		 NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+		service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   35d
+
+12--> run: aws eks list-clusters
+
+      output:
+		{
+			"clusters": [
+				"hello-cluster"
+			]
+		}
+
+13--> AWS CLI vs eksctl vs kubectl
+
+			1. AWS CLI (Command Line Interface)
+
+			- Used to manage AWS services and AWS resources.
+			- Works with services like EC2, S3, IAM, EKS, and CloudFormation.
+			- Example: aws s3 ls
+			- Output:  Lists S3 buckets.
+
+			2. eksctl
+
+			- A command-line tool specifically for managing Amazon EKS clusters.
+			- Used to create, update, and delete EKS clusters.
+			- Example: eksctl create cluster --name hello-cluster --region ap-south-1
+			- Output:  Creates an EKS cluster.
+
+			
+			3. kubectl (Kubernetes CLI)
+
+			- Used to communicate with and manage a Kubernetes cluster.
+			- Manages Pods, Deployments, Services, and other Kubernetes resources.
+			- Example: kubectl get pods
+			- Output:  Lists Kubernetes Pods.
+			
+
+			### Key Difference
+
+			| Tool    | Main purpose                                        |
+			| ------- | --------------------------------------------------- |
+			| AWS CLI | Manage AWS services                                 |
+			| eksctl  | Create and manage EKS clusters                      |
+			| kubectl | Manage applications and resources inside Kubernetes |
+
+			Easy way to remember:
+
+			- AWS CLI → Manage AWS.
+			- eksctl → Manage EKS clusters.
+			- kubectl → Manage Kubernetes workloads.
+
+			Typical workflow: `AWS CLI / eksctl` → Create EKS cluster → `kubectl` → Deploy and manage your application.
+				  
