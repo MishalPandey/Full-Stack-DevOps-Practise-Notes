@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d181e054-5e38-4be3-8584-3026301db680" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/AWS/3_Deployment_in_aws_k8s_of_app1-hello" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/AWS/4_Deployment_in_aws_k8s_of_app2-tax-calculator-Microservice" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AWS/2_Docker_Kubernetes_in_AWS" beforeDir="false" afterPath="$PROJECT_DIR$/AWS/2_Docker_Kubernetes_in_AWS" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +22,65 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0000021458787627" />
+      <entry key="MS500" value="1.0735785616626397" />
+      <entry key="S2" value="1.6677183978317347" />
+      <entry key="S5" value="2.4707487917918094" />
+      <entry key="S10" value="3.0602819806921873" />
+      <entry key="S30" value="3.6358050086474534" />
+      <entry key="S60" value="3.8105843633086773" />
+      <entry key="M2" value="3.9033825600998076" />
+      <entry key="M5" value="3.9608840496625928" />
+      <entry key="M10" value="3.9803629558181886" />
+      <entry key="M15" value="3.9868909985161984" />
+      <entry key="M30" value="3.993436662896339" />
+      <entry key="H1" value="3.9967161191617397" />
+      <entry key="H2" value="3.998357506109246" />
+      <entry key="H4" value="3.9991786146366826" />
+      <entry key="D1" value="3.9998630832104847" />
+      <entry key="W1" value="3.9999804399876724" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9526400422895859" />
+      <entry key="MS500" value="1.0632106631236191" />
+      <entry key="S2" value="1.6634848752042997" />
+      <entry key="S5" value="2.467943761054874" />
+      <entry key="S10" value="3.058440625755112" />
+      <entry key="S30" value="3.6350444157847352" />
+      <entry key="S60" value="3.8101814990530203" />
+      <entry key="M2" value="3.9031751150661784" />
+      <entry key="M5" value="3.960799578465779" />
+      <entry key="M10" value="3.9803204670687853" />
+      <entry key="M15" value="3.9868626161057965" />
+      <entry key="M30" value="3.993422443321583" />
+      <entry key="H1" value="3.9967090022667797" />
+      <entry key="H2" value="3.9983539458829687" />
+      <entry key="H4" value="3.999176834078606" />
+      <entry key="D1" value="3.999862786388988" />
+      <entry key="W1" value="3.9999803975830868" />
+    </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,

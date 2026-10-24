@@ -1,0 +1,288 @@
+1--> Deploy your Hello App in AWS K8s.
+     --> create an same yml file as you had done in kubernates deployment just change Nodeport to LoadBalancer.
+	 
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: app1-hello
+				spec:
+				  replicas: 1
+				  selector:
+					matchLabels:
+					  app: app1-hello
+				  template:
+					metadata:
+					  labels:
+						app: app1-hello
+					spec:
+					  containers:
+						- name: app1-hello
+						  image: mishalpandey/hello-spring:1.0
+						  env:
+							- name: APP_MESSAGE
+							  value: "Hello from app.yaml"
+							- name: DB_PASSWORD
+							  value: "DB_PASSWORD@123" #will not be used in nginx image but I will just log into pods and check these env values
+						  ports:
+							- containerPort: 8080
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: app1-hello
+				spec:
+				  selector:
+					app: app1-hello
+				  type: LoadBalancer
+				  ports:
+					- port: 8080
+					  targetPort: 8080
+					  
+				
+
+2--> Check kubectl has connected to you local dockerDesktop or aws account play via these commands
+
+     --> run: kubectl config get-contexts
+	     output: 
+					CURRENT   NAME             CLUSTER          AUTHINFO         NAMESPACE
+					*         docker-desktop   docker-desktop   docker-desktop
+
+	 
+	 --> run: aws eks update-kubeconfig --region ap-south-1 --name hello-cluster
+	     output:
+					Added new context arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster to C:\Users\Admin\.kube\config
+						
+     --> run: kubectl config get-contexts
+	     output:
+					CURRENT   NAME                                                        CLUSTER                                                     AUTHINFO                                                    NAMESPACE
+							  arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster   arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster   arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster
+					*         docker-desktop                                              docker-desktop                                              docker-desktop
+					
+	 --> run: kubectl config current-context  
+	     output:
+					docker-desktop
+					
+	 --> run: kubectl config use-context docker-desktop
+	     OR
+		 run:  kubectl config use-context  arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster       
+         output:
+					Switched to context "arn:aws:eks:ap-south-1:009908806602:cluster/hello-cluster".
+					
+
+3--> Apply deployment in AWS kubernates
+     --> run: kubectl apply -f app.yaml
+	     output:
+				deployment.apps/app1-hello created
+				service/app1-hello created
+				
+				
+4--> run: kubectl get nodes
+     output:
+    
+			NAME                                            STATUS   ROLES    AGE     VERSION
+			ip-192-168-37-124.ap-south-1.compute.internal   Ready    <none>   8m33s   v1.34.12-eks-117f323
+			ip-192-168-87-245.ap-south-1.compute.internal   Ready    <none>   8m32s   v1.34.12-eks-117f323
+			
+5--> run: kubectl get pods
+     output:
+			NAME                          READY   STATUS    RESTARTS   AGE
+			app1-hello-85b659c978-g7dmm   1/1     Running   0          34s
+			
+6--> To access the deployed hello spring application
+     --> run: kubectl get svc
+	     output:
+			NAME         TYPE           CLUSTER-IP      EXTERNAL-IP                                                                PORT(S)        AGE
+			app1-hello   LoadBalancer   10.100.221.62   a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com   8080:30697/TCP 12m
+			kubernetes   ClusterIP      10.100.0.1      <none>                                                                     443/TCP        61m
+			
+		 URL: http://a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com:8080
+		 Try this on your Local Browser
+		 
+		 Output:
+				{
+				  "container": "app1-hello-85b659c978-g7dmm",
+				  "message": "Hello from Simple App (Spring Boot)",
+				  "env": "No env set"
+				}
+				
+	    
+		If you will use this- Means changing port to 80
+		
+				        apiVersion: apps/v1
+						kind: Deployment
+						metadata:
+						  name: app1-hello
+						spec:
+						  replicas: 1
+						  selector:
+							matchLabels:
+							  app: app1-hello
+						  template:
+							metadata:
+							  labels:
+								app: app1-hello
+							spec:
+							  containers:
+								- name: app1-hello
+								  image: mishalpandey/hello-spring:1.0
+								  env:
+									- name: APP_MESSAGE
+									  value: "Hello from app.yaml"
+									- name: DB_PASSWORD
+									  value: "DB_PASSWORD@123" #will not be used in nginx image but I will just log into pods and check these env values
+								  ports:
+									- containerPort: 8080
+						---
+						apiVersion: v1
+						kind: Service
+						metadata:
+						  name: app1-hello
+						spec:
+						  selector:
+							app: app1-hello
+						  type: LoadBalancer
+						  ports:
+							- port: 80
+							  targetPort: 8080
+							  
+							  
+			--> run: kubectl get svc
+				 output:
+					NAME         TYPE           CLUSTER-IP      EXTERNAL-IP                                                                PORT(S)        AGE
+					app1-hello   LoadBalancer   10.100.221.62   a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com   80:30697/TCP   12m
+					kubernetes   ClusterIP      10.100.0.1      <none>                                                                     443/TCP        61m
+					
+				 URL: http://a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com/
+				 Try this on your Local Browser, Now no need to add port
+				 
+				 Output:
+						{
+						  "container": "app1-hello-85b659c978-g7dmm",
+						  "message": "Hello from Simple App (Spring Boot)",
+						  "env": "No env set"
+						}
+							  
+						
+						
+						
+						
+						
+						
+						
+7--> Scale your Hello spring Application and Check Loadbalancing with ReplicaPods.
+     
+     --> run: kubectl get pods
+		 output:
+				NAME                          READY   STATUS    RESTARTS   AGE
+				app1-hello-85b659c978-g7dmm   1/1     Running   0          31m
+				
+				
+	 --> change replicas = 4 in app.yaml
+	 
+	 
+	 
+	                    apiVersion: apps/v1
+						kind: Deployment
+						metadata:
+						  name: app1-hello
+						spec:
+						  replicas: 4
+						  selector:
+							matchLabels:
+							  app: app1-hello
+						  template:
+							metadata:
+							  labels:
+								app: app1-hello
+							spec:
+							  containers:
+								- name: app1-hello
+								  image: mishalpandey/hello-spring:1.0
+								  env:
+									- name: APP_MESSAGE
+									  value: "Hello from app.yaml"
+									- name: DB_PASSWORD
+									  value: "DB_PASSWORD@123" #will not be used in nginx image but I will just log into pods and check these env values
+								  ports:
+									- containerPort: 8080
+						---
+						apiVersion: v1
+						kind: Service
+						metadata:
+						  name: app1-hello
+						spec:
+						  selector:
+							app: app1-hello
+						  type: LoadBalancer
+						  ports:
+							- port: 80
+							  targetPort: 8080
+							
+							
+	 --> run: kubectl apply -f app.yaml
+	     output:
+				NAME                          READY   STATUS    RESTARTS   AGE
+				app1-hello-85b659c978-4ngtj   1/1     Running   0          13m
+				app1-hello-85b659c978-99ll4   1/1     Running   0          13m
+				app1-hello-85b659c978-g7dmm   1/1     Running   0          53m
+				app1-hello-85b659c978-ts2pz   1/1     Running   0          13m
+							  
+							  
+	 
+			
+			
+	 --> RUN IN POWERSHELL To trigger a lot of request at the same time Bulk request at this endpoint. 
+				while ($true) {
+					curl.exe -H "Connection: close" "http://a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com/"
+					Start-Sleep -Seconds 1
+				}
+
+			
+	 --> via this command even you can verify scaling has happen and different pods has been using at the same time for the responses means traffic distribution
+	      has been happening / loadBalancing has been happening.
+		  
+		  
+		  
+		  
+		  
+8--> Self Healing in Kubernetes (K8S)
+
+     run: kubectl get pods
+			NAME                          READY   STATUS    RESTARTS   AGE
+			app1-hello-85b659c978-99ll4   1/1     Running   0          27m
+			app1-hello-85b659c978-g7dmm   1/1     Running   0          67m
+			
+	 --> run on powershell
+		    while ($true) {
+				curl.exe -s -H "Connection: close" "http://a5937856c6d4c4794b4842fb5844e959-1323087164.ap-south-1.elb.amazonaws.com/"
+				Write-Output ""
+				Start-Sleep -Seconds 1
+			}
+     run: kubectl delete pod app1-hello-85b659c978-99ll4
+            pod "app1-hello-85b659c978-99ll4" deleted from default namespace
+     run: kubectl get pods
+			NAME                          READY   STATUS    RESTARTS   AGE
+			app1-hello-85b659c978-g7dmm   1/1     Running   0          68m
+			app1-hello-85b659c978-rf6ws   1/1     Running   0          5s
+     
+	 -->After deletion of pod app1-hello-85b659c978-99ll4, as we mentioned in app.yaml 2 replicas,
+	    it automatically created a new pod- app1-hello-85b659c978-g7dmm. and you can see 
+		on terminal when pod app1-hello-85b659c978-99ll4 has been deleted all traffic goes to one active pod only pod- app1-hello-85b659c978-g7dmm
+		it does not stopped giving responses and after creation of pod app1-hello-85b659c978-g7dmm traffic goes now on this one as well.
+		
+		
+		
+9--> Cleaning Up and Deleting all resources on AWS.
+     --> run: kubectl delete -f app.yaml
+	     It will delete deployment and service both.
+		 
+			deployment.apps "app1-hello" deleted from default namespace
+			service "app1-hello" deleted from default namespace
+			
+	 --> run: kubectl delete all --all --all-namespace
+	     It will delete everything all namespaces and all the deployment, service, jobs unders these namespaces.
+		 
+	 --> run: eksctl delete cluster --name hello-cluster --region ap-south-1
+	      It will delete cluster hello-cluster
+		  
+		  

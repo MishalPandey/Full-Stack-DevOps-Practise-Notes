@@ -1,0 +1,165 @@
+Deployement of Microservice: app2-tax-calculator.
+
+1--> service-b -->> app.yaml
+        
+		
+		#We can use here ClusterIP kyuki service ko aws ke andar hi call karna hai aws ke bahar call kar rhe honge to LoadBalancer chahiye hoga. 
+		
+			apiVersion: apps/v1
+			kind: Deployment
+			metadata:
+			  name: service-b
+			spec:
+			  replicas: 1
+			  selector:
+				matchLabels:
+				  app: service-b
+			  template:
+				metadata:
+				  labels:
+					app: service-b
+				spec:
+				  containers:
+					- name: service-b
+					  image: mishalpandey/tax-calculator-service-b:1.0
+					  ports:
+						- containerPort: 4000
+			---
+			apiVersion: v1
+			kind: Service
+			metadata:
+			  name: service-b
+			spec:
+			  selector:
+				app: service-b
+			  type: ClusterIP  
+			  ports:
+				- port: 4000
+				  targetPort: 4000
+
+
+2--> service-a  -->> app.yaml 
+
+        #No change in app.yaml of service-b in respect to Kubernates Local app.yaml configuration for local deployement
+		#Slight change in app.yaml of service-a in respect to Kubernates Local app.yaml configuration for local deployement,
+		#here we have chnaged NodePort to LoadBalancer and
+        #port to 80 because that is default port then we dont have to explicitely mention port in call.
+		
+        # changed Part- 
+						#apiVersion: v1
+						#kind: Service
+						#metadata:
+						#  name: service-a
+						#spec:
+						#  selector:
+						#    app: service-a
+						#  type: LoadBalancer
+						#  ports:
+						#    - port: 80
+						#      targetPort: 3000		
+						
+			apiVersion: apps/v1
+			kind: Deployment
+			metadata:
+			  name: service-a
+			spec:
+			  replicas: 1
+			  selector:
+				matchLabels:
+				  app: service-a
+			  template:
+				metadata:
+				  labels:
+					app: service-a
+				spec:
+				  containers:
+					- name: service-a
+					  image: mishalpandey/tax-calculator-service-a:1.0
+					  env:
+						- name: TAX_SERVICE_URL
+						  value: "http://service-b:4000"
+					  ports:
+						- containerPort: 3000
+			---
+			apiVersion: v1
+			kind: Service
+			metadata:
+			  name: service-a
+			spec:
+			  selector:
+				app: service-a
+			  type: LoadBalancer
+			  ports:
+				- port: 80
+				  targetPort: 3000
+				  
+				  
+				  
+3--> Apply changes of service-a and service-b.
+
+     --> run: eksctl create cluster --name hello-cluster --region ap-south-1 --nodes 2 --node-type t3.small
+	          --For creating cluster
+		 
+	 --> run: ls
+	     output:
+			Directory: D:\IdeaProjectsDevOps\Full-Stack-DevOps-Practise\AWS\3_aws_k8s_Deployment_of_app2-tax-calculator-microservice
+			Mode                 LastWriteTime         Length Name
+			----                 -------------         ------ ----
+			d-----        24/10/2026     19:08                service-a
+			d-----        24/10/2026     18:53                service-b
+			
+	 --> run:  kubectl apply -f .\service-a\
+	     output:
+			deployment.apps/service-a created
+			service/service-a created
+     --> run:  k kubectl apply -f .\service-b\
+	     output:
+			deployment.apps/service-b created
+			service/service-b created
+     --> run:  k kubectl get pods
+	     output:
+			NAME                         READY   STATUS    RESTARTS   AGE
+			service-a-7b86f6dcb6-5nvhr   1/1     Running   0          20s
+			service-b-6cc6fb8f97-t7x8g   1/1     Running   0          13s
+     --> run:  kubectl get svc
+	     output:
+			NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                                                                PORT(S)        AGE
+			kubernetes   ClusterIP      10.100.0.1       <none>                                                                     443/TCP        15m
+			service-a    LoadBalancer   10.100.236.102   a10129fd736a2485b9df4bc53ac30ac5-1558939932.ap-south-1.elb.amazonaws.com   80:31984/TCP   39s
+			service-b    ClusterIP      10.100.139.216   <none>                                                                     4000/TCP       32s
+
+
+4--> You can check this URL- http://a10129fd736a2485b9df4bc53ac30ac5-1558939932.ap-south-1.elb.amazonaws.com/price?amount=200&country=US
+
+     -->output:
+			{
+			  "tax": 8,
+			  "service_b_container": "service-b-6cc6fb8f97-t7x8g",
+			  "container": "service-a-7b86f6dcb6-5nvhr",
+			  "total": 208,
+			  "service": "A",
+			  "amount": 200
+			}
+			-from your local browser.
+			
+			
+5--> Read about Ingress, Ingress Controller and azure application's ingress is AKS Application Gateway Ingress Controller
+
+CMD- cd ../
+   - cd ../..
+   - cd ../../..
+for going back in the directory
+CMD- cd .\service-a\
+   - cd .\service-a\aws\
+for going inside service-a in the directory
+
+
+6--> Re-Build the image again Frontend Application
+
+    -->Why We are re-building image?
+	   -Kyuki frontend application ke .env file me humne VITE_API_URL=http://localhost:3100 add kar rakha hai,
+	    jaha se woh backend service ka url pick karta hai par hum ingess apply kar rahe jisse ek hi url hoga frontend ke liye bhi aur backend ke liye bhi
+		bus usme /api add hojayega toh hume esliye phirse build karna hoga VITE_API_URL=/api add karke .env file me
+		
+	--> run:  docker build -t mishalpandey/tax-calculator-frontend:latest .
+	    run:  docker push mishalpandey/tax-calculator-frontend:latest 

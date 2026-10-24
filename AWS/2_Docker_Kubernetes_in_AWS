@@ -200,90 +200,13 @@ Kubernetes in Cloud
 10--> Create your First Cluster in Amazon EKS (Not via Screen but will EKSCTL Tool or we can say command line)
 
      --> Add required permission for pandeym in IAM and then
-					{
-						"Version": "2012-10-17",
-						"Statement": [
-							{
-								"Effect": "Allow",
-								"Action": "eks:*",
-								"Resource": "*"
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"ssm:GetParameter",
-									"ssm:GetParameters"
-								],
-								"Resource": [
-									"arn:aws:ssm:*:009908806602:parameter/aws/*",
-									"arn:aws:ssm:*::parameter/aws/*"
-								]
-							},
-							{
-								"Effect": "Allow",
-								"Action": [
-									"kms:CreateGrant",
-									"kms:DescribeKey"
-								],
-								"Resource": "*"
-							},
-							{
-								"Effect": "Allow",
-								"Action": "logs:PutRetentionPolicy",
-								"Resource": "*"
-							},
-							{
-								"Effect": "Allow",
-								"Action": "iam:CreateServiceLinkedRole",
-								"Resource": "*",
-								"Condition": {
-									"StringEquals": {
-										"iam:AWSServiceName": [
-											"eks.amazonaws.com",
-											"eks-nodegroup.amazonaws.com",
-											"eks-fargate.amazonaws.com",
-											"autoscaling.amazonaws.com",
-											"ec2scheduled.amazonaws.com",
-											"elasticloadbalancing.amazonaws.com",
-											"spot.amazonaws.com",
-											"spotfleet.amazonaws.com",
-											"transitgateway.amazonaws.com"
-										]
-									}
-								}
-							},
-							{
-								"Effect": "Allow",
-								"Action": "cloudformation:*",
-								"Resource": "*"
-							}
-						]
-					}
-					
-					And
-					
-					{
-						"Version": "2012-10-17",
-						"Statement": [
-							{
-								"Effect": "Allow",
-								"Action": [
-									"eks:*",
-									"ec2:*",
-									"cloudformation:*",
-									"iam:*",
-									"ssm:GetParameter",
-									"ssm:GetParameters",
-									"kms:DescribeKey",
-									"kms:CreateGrant",
-									"logs:PutRetentionPolicy"
-								],
-								"Resource": "*"
-							}
-						]
-					}
-					
+			ADDED AdministratorAccess so that pandeym iam user have all the access which root user mishalpandey have.
+			NOW NO NEED TO GIVE SEPRATE PERMISSIONS.
 	 --> run: eksctl create cluster --name hello-cluster --region ap-south-1 --nodes 2
+	         --> It is not correct it will create node of m5.large which is not eligible for free tier.
+	 --> run: eksctl create cluster --name hello-cluster --region ap-south-1 --nodes 2 --node-type t3.small
+	     
+	     Check CloudFormation Resource of AWS if ny issues occured.
 	 
 	 
 	 
