@@ -158,8 +158,259 @@ for going inside service-a in the directory
 
     -->Why We are re-building image?
 	   -Kyuki frontend application ke .env file me humne VITE_API_URL=http://localhost:3100 add kar rakha hai,
-	    jaha se woh backend service ka url pick karta hai par hum ingess apply kar rahe jisse ek hi url hoga frontend ke liye bhi aur backend ke liye bhi
+	    jaha se woh backend service ka url pick karta hai par hum ingress apply kar rahe jisse ek hi url hoga frontend ke liye bhi aur backend ke liye bhi
 		bus usme /api add hojayega toh hume esliye phirse build karna hoga VITE_API_URL=/api add karke .env file me
 		
 	--> run:  docker build -t mishalpandey/tax-calculator-frontend:latest .
 	    run:  docker push mishalpandey/tax-calculator-frontend:latest 
+		
+		
+		
+7--> Ingress Configuration
+
+	apiVersion: networking.k8s.io/v1  #konsa version use karna k8s ka
+	kind: Ingress #kubernetes ko bata raha ki yeh Ingress configuration ki file hai
+	metadata:
+	  name: simple-ingress
+	spec:
+	ingressClassName: nginx #nginx use kar rhe as an ingress-controller
+	  rules:
+		- http:
+			paths:
+			  - path: /     
+				pathType: Prefix
+				backend:
+				  service:
+					name: my-app  #my-app pe aayega sare traffic having / url and 80 port. like abc/login will go here, like abc/ will go here.
+					port:
+					  number: 80
+					  
+					  
+					  
+Check PDF NOTES for ingress working and understanding.
+
+
+	
+8--> Going Full Stack Deploying Entire Microservice Architecture
+
+     --> install ingress with command-
+	     run: kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.6/deploy/static/provider/cloud/deploy.yaml
+		 
+		 output: 
+				namespace/ingress-nginx created
+				serviceaccount/ingress-nginx created
+				serviceaccount/ingress-nginx-admission created
+				role.rbac.authorization.k8s.io/ingress-nginx created
+				role.rbac.authorization.k8s.io/ingress-nginx-admission created
+				clusterrole.rbac.authorization.k8s.io/ingress-nginx created
+				clusterrole.rbac.authorization.k8s.io/ingress-nginx-admission created
+				rolebinding.rbac.authorization.k8s.io/ingress-nginx created
+				rolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+				clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx created
+				clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+				configmap/ingress-nginx-controller created
+				service/ingress-nginx-controller created
+				service/ingress-nginx-controller-admission created
+				deployment.apps/ingress-nginx-controller created
+				job.batch/ingress-nginx-admission-create created
+				job.batch/ingress-nginx-admission-patch created
+				ingressclass.networking.k8s.io/nginx created
+				validatingwebhookconfiguration.admissionregistration.k8s.io/ingress-nginx-admission created
+				
+				
+	 --> ingress.yaml
+	 
+				apiVersion: networking.k8s.io/v1
+				kind: Ingress
+				metadata:
+				  name: tax-app-ingress
+				  annotations:
+					nginx.ingress.kubernetes.io/use-regex: "true"
+					nginx.ingress.kubernetes.io/rewrite-target: /$1
+				spec:
+				  ingressClassName: nginx
+				  rules:
+					- http:
+						paths:
+						  - path: /api/(.*)
+							pathType: Prefix
+							backend:
+							  service:
+								name: service-a
+								port:
+								  number: 80
+						  - path: /(.*)
+							pathType: Prefix
+							backend:
+							  service:
+								name: frontend
+								port:
+								  number: 80
+								  
+								  
+	 --> app.yaml for frontend application
+	 
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: frontend
+				spec:
+				  replicas: 1
+				  selector:
+					matchLabels:
+					  app: frontend
+				  template:
+					metadata:
+					  labels:
+						app: frontend
+					spec:
+					  containers:
+						- name: frontend
+						  image: mishalpandey/tax-calculator-frontend:latest
+						  ports:
+							- containerPort: 80
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: frontend
+				spec:
+				  selector:
+					app: frontend
+				  type: LoadBalancer
+				  ports:
+					- port: 80
+					  targetPort: 80
+					  
+					  
+	
+	 --> app.yaml for service-a
+	 
+	 
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: service-a
+				spec:
+				  replicas: 1
+				  selector:
+					matchLabels:
+					  app: service-a
+				  template:
+					metadata:
+					  labels:
+						app: service-a
+					spec:
+					  containers:
+						- name: service-a
+						  image: mishalpandey/tax-calculator-service-a:1.0
+						  env:
+							- name: TAX_SERVICE_URL
+							  value: "http://service-b:4000"
+						  ports:
+							- containerPort: 3000
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: service-a
+				spec:
+				  selector:
+					app: service-a
+				  type: LoadBalancer
+				  ports:
+					- port: 80
+					  targetPort: 3000
+					  
+					  
+	 
+	 -->app.yaml for service-b
+	 
+	 
+				apiVersion: apps/v1
+				kind: Deployment
+				metadata:
+				  name: service-b
+				spec:
+				  replicas: 1
+				  selector:
+					matchLabels:
+					  app: service-b
+				  template:
+					metadata:
+					  labels:
+						app: service-b
+					spec:
+					  containers:
+						- name: service-b
+						  image: mishalpandey/tax-calculator-service-b:1.0
+						  ports:
+							- containerPort: 4000
+				---
+				apiVersion: v1
+				kind: Service
+				metadata:
+				  name: service-b
+				spec:
+				  selector:
+					app: service-b
+				  type: ClusterIP
+				  ports:
+					- port: 4000
+					  targetPort: 4000
+
+
+	  
+    
+	
+	 --> run: kubectl get pods -n ingress-nginx
+	     output:
+				NAME                                        READY   STATUS      RESTARTS   AGE
+				ingress-nginx-admission-create-q25rh        0/1     Completed   0          35s
+				ingress-nginx-admission-patch-qq5lv         0/1     Completed   0          35s
+				ingress-nginx-controller-766968cbf4-n7dhz   1/1     Running     0          35s
+				
+	 --> run: PS D:\IdeaProjectsDevOps\Full-Stack-DevOps-Practise\AWS\4_goingFullStackDeployingEntireMicroserviceArchitecture_at_aws_k8s> ls
+         output:
+				Directory: D:\IdeaProjectsDevOps\Full-Stack-DevOps-Practise\AWS\4_goingFullStackDeployingEntireMicroserviceArchitecture_at_aws_k8s
+
+				Mode                 LastWriteTime         Length Name
+				----                 -------------         ------ ----
+				d-----        24/10/2026     22:36                frontend
+				d-----        24/10/2026     22:31                service-a
+				d-----        24/10/2026     22:31                service-b
+				-a----        24/10/2026     22:40            653 ingress.yaml
+
+
+     --> run: kubectl apply -f .\ingress.yaml
+	     output:
+				Warning: path /api/(.*) cannot be used with pathType Prefix
+				Warning: path /(.*) cannot be used with pathType Prefix
+				ingress.networking.k8s.io/tax-app-ingress created
+				
+				
+     --> run: kubectl apply -f .\service-a\
+	     output:
+				deployment.apps/service-a unchanged
+				service/service-a unchanged
+     
+	 --> run: kubectl apply -f .\service-b\
+	     output:
+				deployment.apps/service-b unchanged
+				service/service-b unchanged
+				
+     --> run: kubectl apply -f .\frontend\
+	     output:
+				deployment.apps/frontend created
+				service/frontend created
+     --> run: kubectl  get ingress
+	     output:
+				NAME              CLASS   HOSTS   ADDRESS                                                                    PORTS   AGE
+				tax-app-ingress   nginx   *       aea3774647a884559b3c1b7034cfbd87-1978744860.ap-south-1.elb.amazonaws.com   80      57s
+
+
+
+
+
+URL- http://aea3774647a884559b3c1b7034cfbd87-1978744860.ap-south-1.elb.amazonaws.com/
+Check here is your Frontend Application, check your networking for service-a.
