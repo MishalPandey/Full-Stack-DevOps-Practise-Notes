@@ -242,4 +242,170 @@
 					  APP_ENV: dev
 					  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 					run: echo "Hello from the second pipeline! APP_ENV = $APP_ENV, DB_PASSWORD = $DB_PASSWORD , Global_Env_Var = $Global_Env_Var, Job_Env_Var = $Job_Env_Var"
+					
+					
+		
+		
+8--> What is Runner? 
+     --> 
+		Runner: A runner is a machine (virtual machine or self-hosted computer) that executes the jobs defined in a GitHub Actions workflow.
+
+		Types of Runners:
+
+		- GitHub-hosted runner: A machine managed by GitHub, such as `ubuntu-latest`, `windows-latest`, or `macos-latest`.
+		- Self-hosted runner: Your own machine or server configured to execute workflow jobs.
+
+		Example:
+			```
+			jobs:
+			  build:
+				runs-on: ubuntu-latest
+				steps:
+				  - uses: actions/checkout@v4
+				  - run: echo "Hello GitHub Actions"
+			```
+
+		Here, `runs-on: ubuntu-latest` tells GitHub Actions to use an Ubuntu runner to execute the job.
+		In short: Workflow defines what to do, a job groups the tasks, and the runner is the machine that executes them.
+		
+		Runner Lifecycle:
+			1. Workflow triggered – An event occurs, such as a push or pull request.
+			2. Job queued – GitHub places the job in a queue.
+			3. Runner assigned – An available compatible runner picks up the job.
+			4. Environment setup – The runner prepares the environment and checks out the code if configured.
+			5. Job execution – The runner executes the workflow steps, such as build, test, and deployment.
+			6. Job completion – The job succeeds, fails, or is cancelled.
+			7. Cleanup – Temporary resources and workspaces are cleaned up as applicable. 
+			
+			IMPORTANT:
+			GitHub-hosted runners are generally discarded after the job; 
+			self-hosted runners can be reused.
+			
+			
+			
+9--> Providing Parameter/Inputs for inbuilt Github Actions 
+     --> Check inbuilt Actions here- https://github.com/actions
 	 
+	 
+	 
+			name: Inbuilt Actions Uses at Runner with its Inputs
+
+			on:
+			  push:
+			  pull_request:
+			  workflow_dispatch:
+
+			jobs:
+			  build:
+				runs-on: ubuntu-latest
+
+				steps:
+				  - name: Say Hello
+					run: echo "Hello from the inbuilt actions workflow!"
+
+				  - name: Install
+					env:
+					  APP_ENV: dev
+					  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+					run: |
+					  echo "Hello from the inbuilt actions workflow!"
+					  echo "APP_ENV = $APP_ENV"
+					  if [ -n "$DB_PASSWORD" ]; then
+						echo "DB_PASSWORD secret is configured"
+					  else
+						echo "DB_PASSWORD secret is not configured"
+					  fi
+
+				  - name: Create demo file
+					run: |
+					  echo "This is a demo file created by the workflow." > demo.txt
+					  echo "File created successfully."
+
+				  - name: Upload Demo
+					uses: actions/upload-artifact@v4
+					with: 
+					  name: build-demo-artifact
+					  path: demo.txt
+					  
+					  
+					  
+	-->	Providing Parameters/Inputs to Built-in GitHub Actions
+
+		- Built-in Actions: Reusable actions provided by GitHub or the community to perform tasks such as checking out code, 
+		                    uploading artifacts, and setting up environments.
+		- `uses`: Specifies which action to run.
+		- `with`: Passes input parameters to an action.
+		- `run`: Executes shell commands on the runner.
+		- `env`: Defines environment variables and secrets for a step.
+
+			Example:
+				```
+				- name: Upload Demo
+				  uses: actions/upload-artifact@v4
+				  with: #with keyword has been used to pass parameters to action
+					name: build-demo-artifact
+					path: demo.txt
+				```
+				
+			- `uses: actions/upload-artifact@v4` → Selects the upload-artifact action.
+			- `with: name` → Specifies the artifact name.
+			- `with: path` → Specifies the file or directory to upload.
+
+    --> You can see in workflow text file which we have created at runner we will get the download link for the same.
+
+10--> Job Dependencies & Pipeline Flow
+      --> One Job can be dependent to other job like suppose we want this job to run then only run the next job.	
+
+
+			name: Dependency Jobs Workflow
+
+			on:
+			  push:
+			  pull_request:
+			  workflow_dispatch:
+
+			jobs:
+			  build:
+				runs-on: ubuntu-latest
+
+				steps:
+				  - name: Say Hello
+					run: echo "Hello from the inbuilt actions workflow!"
+
+				  - name: Install
+					env:
+					  APP_ENV: dev
+					  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+					run: |
+					  echo "Hello from the inbuilt actions workflow!"
+					  echo "APP_ENV = $APP_ENV"
+					  if [ -n "$DB_PASSWORD" ]; then
+						echo "DB_PASSWORD secret is configured"
+					  else
+						echo "DB_PASSWORD secret is not configured"
+					  fi
+
+				  - name: Create demo file
+					run: |
+					  echo "This is a demo file created by the workflow." > demo.txt
+					  echo "File created successfully."
+
+				  - name: Upload Demo
+					uses: actions/upload-artifact@v4
+					with:
+					  name: build-demo-artifact
+					  path: demo.txt
+
+
+			  test:
+				runs-on: ubuntu-latest
+				needs: build  #It means that the test job will only run after the build job has completed successfully.
+			#    This ensures that the test job has access to any artifacts or outputs produced by the build job.
+
+				steps:
+				  - name: Test Job
+					run: echo "Test job completed!"
+
+
+	 
+			 
