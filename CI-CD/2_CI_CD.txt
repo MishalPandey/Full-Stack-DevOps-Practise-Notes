@@ -1,0 +1,202 @@
+CD Part Here Continuous Deployment. -->>
+
+1--> eksctl create cluster --name hello-cluster --region ap-south-1 --nodes 2
+     --> create a cluster at AWS
+	 
+2--> How kubectl Connects to an AWS EKS Cluster
+     -->
+		- `kubectl` is a command-line tool used to communicate with a Kubernetes cluster.
+		- To connect to an AWS EKS cluster, `kubectl` uses a configuration file called kubeconfig.
+		- The default kubeconfig file location is:
+			~/.kube/config
+
+				How It Works?
+
+					1. Install and configure AWS CLI.
+					2. Authenticate with your AWS account using AWS credentials.
+					3. Run `aws eks update-kubeconfig` to generate/update the kubeconfig file.
+					4. The kubeconfig file stores cluster details, API server endpoint, certificate information, and authentication configuration.
+					5. `kubectl` reads this file and connects to the EKS API server.
+					6. AWS IAM credentials are used to authenticate your access to the cluster.
+
+				Commands?
+
+					Connect kubectl to EKS: aws eks update-kubeconfig --region ap-south-1 --name hello-cluster
+					Check current context: kubectl config current-context
+					Check cluster nodes: kubectl get nodes
+					View kubeconfig: kubectl config view
+				
+
+				Remember
+
+					- AWS CLI: Authenticates with AWS.
+					- kubeconfig: Stores Kubernetes cluster connection configuration.
+					- kubectl: Uses kubeconfig to communicate with the EKS API server.
+					- EKS: Provides the managed Kubernetes control plane.
+
+				Flow:
+
+					AWS Account
+						↓
+					AWS CLI Authentication
+						↓
+					aws eks update-kubeconfig
+						↓
+					Kubeconfig File (~/.kube/config)
+						↓
+					kubectl
+						↓
+					EKS API Server
+						↓
+					Kubernetes Cluster
+
+
+		Important: Updating kubeconfig does not itself grant cluster permissions. Your IAM identity must also be authorized to access the EKS cluster.
+		
+		
+
+
+
+
+3--> Create a 10_hello_spring_ci_cd.yml File.
+     --> Check- deploy-to-aws-eks Job
+	 
+	 
+				name: Hello Spring Boot App to AWS EKS Cluster
+
+				on:
+				  push:
+					paths:
+						- 'src/**'
+						- 'build.gradle'
+						- 'settings.gradle'
+						- 'gradle/**'
+						- .github/workflows/10_hello_spring_ci_cd.yml
+				  workflow_dispatch:
+
+				jobs:
+				  build-and-test:
+					runs-on: ubuntu-latest
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build and Test Application
+						run: |
+						  chmod +x gradlew
+						  ./gradlew clean build
+
+					  - name: Upload Test Reports
+						if: always()
+						uses: actions/upload-artifact@v4
+						with:
+						  name: test-reports
+						  path: build/reports/tests/test/
+						  if-no-files-found: ignore
+
+				  docker-build-and-push:
+					runs-on: ubuntu-latest
+					needs: build-and-test
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build JAR for Docker
+						run: |
+						  chmod +x gradlew
+						  ./gradlew bootJar -x test
+
+					  - name: Log in to Docker Hub
+						uses: docker/login-action@v3
+						with:
+						  username: ${{ secrets.DOCKER_USERNAME }}
+						  password: ${{ secrets.DOCKER_PASSWORD }}
+
+					  - name: Build and Push Docker Image
+						uses: docker/build-push-action@v6
+						with:
+						  context: .
+						  push: true
+						  tags: |
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:latest
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:${{ github.sha }}
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:${{ github.ref_name }}
+
+				  deploy-to-aws-eks:
+					runs-on: ubuntu-latest
+					needs: docker-build-and-push
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Configure AWS credentials
+						uses: aws-actions/configure-aws-credentials@v4
+						with:
+						  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+						  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+						  aws-region: ap-south-1
+
+					  - name: Set up kubectl
+						uses: azure/setup-kubectl@v4
+
+					  - name: Update kubeconfig for EKS
+						run: aws eks update-kubeconfig --name hello-cluster --region ap-south-1
+
+					  - name: Verify connection to EKS cluster
+						run: |
+						  kubectl get nodes
+						  kubectl get pods --all-namespaces
+
+					  - name: Deploy to AWS EKS
+						run: kubectl apply -f 2_aws_k8s_Deployment_of_app1-hello
+						
+		Important: For Job deploy-to-aws-eks, Humne Runner pe phle AWS account login kiya then kubectl install kiya then kubectl ki kubeconfig
+		           file ko update kardi jisme sare credential stored hogye honge taki kubectl directly AWS EKS ko Acess kar paye.
+				   
+				   AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY, IAM user me jake jis user pe paas Admin access hai woh usse jake Access keys create karlo aur apne
+				   Github Repository ke secrets me daalalo.
+		
+		Check this- https://github.com/MishalPandey/CICD-Practise/actions/runs/41293975526
+		
+		Verification:
+				On your powershell-
+				run: kubectl get pods
+							NAME                          READY   STATUS    RESTARTS   AGE
+							app1-hello-547bddbccd-76798   1/1     Running   0          5m22s
+							app1-hello-547bddbccd-j62jz   1/1     Running   0          5m22s
+				run: kubectl get svc
+							NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                                                                PORT(S)        AGE
+							app1-hello   LoadBalancer   10.100.180.213   a42f875c27bd14ee593c0a86fd606e14-1517966730.ap-south-1.elb.amazonaws.com   80:32615/TCP   5m40s
+							kubernetes   ClusterIP      10.100.0.1       <none>
+							
+				ON YOUR BROWSER: http://a42f875c27bd14ee593c0a86fd606e14-1517966730.ap-south-1.elb.amazonaws.com/		
+                        Response:				
+				            {
+							  "container": "app1-hello-547bddbccd-j62jz",
+							  "env": "No env set",
+							  "message": "Hello from Simple App (Spring Boot)"
+							}
+							
+				run: kubectl delete -f 2_aws_k8s_Deployment_of_app1-hello
+				run: eksctl delete cluster --name hello-cluster --region ap-south-1
+				     Manually Deleting Resource which we have created 
+
+
+
+
+IMPLEMETED CICD in Hello Spring Application-------------->>>>>>>>>>>>>
