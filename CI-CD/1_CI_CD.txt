@@ -408,4 +408,150 @@
 
 
 	 
-			 
+
+
+
+
+11--> Context Objects.
+      --> 
+		  A context is an object that contains information about a GitHub Actions workflow, such as repository details, 
+		  environment variables, runner information, secrets, and job status. 
+		  Check this link- https://docs.github.com/en/actions/reference/workflows-and-actions/contexts  
+			Syntax:
+			${{ context.property }} 
+	
+		Important Contexts in GitHub Actions
+			- `github` → Provides workflow and repository information. Example: `${{ github.repository }}`
+			- `env` → Accesses environment variables. Example: `${{ env.APP_ENV }}`
+			- `vars` → Accesses custom configuration variables. Example: `${{ vars.APP_NAME }}`
+			- `secrets` → Accesses stored secrets. Example: `${{ secrets.DB_PASSWORD }}`
+			- `runner` → Provides runner information. Example: `${{ runner.os }}`
+			- `job` → Provides information about the current job. Example: `${{ job.status }}`
+			- `steps` → Accesses step outputs and outcomes. Example: `${{ steps.build.outcome }}`
+			- `needs` → Accesses results and outputs from dependent jobs. Example: `${{ needs.build.result }}`
+			- `inputs` → Accesses inputs passed to a workflow or action. Example: `${{ inputs.environment }}`
+
+		Note: Context values are accessed using the `${{ }}` expression syntax. 
+		      Each context has a specific purpose and is available only in supported workflow locations.
+			  
+		What is the env context?
+			- The env context accesses environment variables defined at the workflow, job, or step level.
+			- Syntax: ${{ env.VARIABLE_NAME }}
+			- A step-level variable overrides a job-level variable, which overrides a workflow-level variable.
+			- The env context does not include every environment variable already present on the runner.
+			
+			
+	    yml file:
+		
+				name: Context Object Demo
+				run-name: ${{ github.actor }} is testing out GitHub Actions Context Object
+
+				on:
+				  push:
+
+				jobs:
+				  Explore-Github-Context-Object:
+					runs-on: ubuntu-latest
+
+					steps:
+					  - name: Display Trigger Event
+						run: echo "This job was automatically triggered by ${{ github.event_name }} event."
+
+					  - name: Display Runner OS
+						run: echo "The job is running on ${{ runner.os }} hosted runner by GitHub."
+
+					  - name: Display Repository Information
+						run: |
+						  echo "Branch/ref: ${{ github.ref }}"
+						  echo "Commit message: ${{ github.event.head_commit.message }}"
+						  echo "Repository: ${{ github.repository }}"
+
+					  - name: Checkout Repository Code
+						uses: actions/checkout@v4
+
+					  - name: Display Workspace
+						run: echo "The ${{ github.repository }} repository has been checked out to ${{ github.workspace }}."
+
+					  - name: Ready Message
+						run: echo "The workflow is now ready to test your code on the runner."
+
+					  - name: List Files in the Repository
+						run: |
+						  ls -la "${{ github.workspace }}"
+
+					  - name: Display Job Status
+						if: always()
+						run: echo "This job status is ${{ job.status }}"
+						
+
+
+12--> Build and Test SpringBoot Application
+
+     --> .yml
+	 
+				name: Hello Spring Boot App to Docker
+				on:
+				  push:
+				  workflow_dispatch:
+
+				jobs:
+				  build-and-test:
+					runs-on: ubuntu-latest
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build and Test Application
+						run: |
+						  chmod +x gradlew
+						  ./gradlew clean build
+
+					  - name: Upload Test Reports
+						if: always()
+						uses: actions/upload-artifact@v4
+						with:
+						  name: test-reports
+						  path: build/reports/tests/test/
+						  if-no-files-found: ignore
+
+				  docker-build-and-push:
+					runs-on: ubuntu-latest
+					needs: build-and-test
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build JAR for Docker
+						run: |
+						  chmod +x gradlew
+						  ./gradlew bootJar -x test
+
+					  - name: Log in to Docker Hub
+						uses: docker/login-action@v3
+						with:
+						  username: ${{ secrets.DOCKER_USERNAME }}
+						  password: ${{ secrets.DOCKER_PASSWORD }}
+
+					  - name: Build and Push Docker Image
+						uses: docker/build-push-action@v6
+						with:
+						  context: . 
+						  push: true
+						  tags: |
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:latest
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:${{ github.sha }}
+							${{ secrets.DOCKER_USERNAME }}/hello-spring-boot:${{ github.ref_name }}
