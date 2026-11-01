@@ -1,0 +1,476 @@
+CICD for TAX Caclulator Frontend+Backend  Microservice.-->
+
+
+1--> Create tax_calculator_spring_ci_cd.yml workflow for backend Applications
+     -->
+	 
+	
+				name: Tax Calculator Spring CI/CD to AWS EKS Cluster
+
+				on:
+				  workflow_dispatch:
+
+				jobs:
+
+				  # 1. Build and Test Both Microservices using Matrix Strategy
+				  build-and-test:
+					runs-on: ubuntu-latest
+
+					strategy:
+					  matrix:
+						service: [service-a, service-b]
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build and Test Application
+						working-directory: Docker/app2-tax-calculator/${{ matrix.service }}
+						run: |
+						  chmod +x gradlew
+						  ./gradlew clean build
+
+					  - name: Upload Test Reports
+						if: always()
+						uses: actions/upload-artifact@v4
+						with:
+						  name: test-reports-${{ matrix.service }}
+						  path: Docker/app2-tax-calculator/${{ matrix.service }}/build/reports/tests/test/
+						  if-no-files-found: ignore
+
+
+				  # 2. Build and Push Docker Images using Matrix Strategy for Both Microservices
+				  docker-build-and-push:
+					runs-on: ubuntu-latest
+					needs: build-and-test
+
+					strategy:
+					  matrix:
+						service:
+						  - name: service-a
+							docker_name: tax-calculator-service-a
+							path: Docker/app2-tax-calculator/service-a
+
+						  - name: service-b
+							docker_name: tax-calculator-service-b
+							path: Docker/app2-tax-calculator/service-b
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Set JDK
+						uses: actions/setup-java@v5
+						with:
+						  distribution: temurin
+						  java-version: '21'
+
+					  - name: Build JAR for Docker
+						working-directory: ${{ matrix.service.path }}
+						run: |
+						  chmod +x gradlew
+						  ./gradlew bootJar -x test
+
+					  - name: Log in to Docker Hub
+						uses: docker/login-action@v3
+						with:
+						  username: ${{ secrets.DOCKER_USERNAME }}
+						  password: ${{ secrets.DOCKER_PASSWORD }}
+
+					  - name: Build and Push Docker Image
+						uses: docker/build-push-action@v6
+						with:
+						  context: ${{ matrix.service.path }}
+						  push: true
+						  tags: |
+							${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.docker_name }}:latest
+
+
+				  # 3. Deploy Both Services to AWS EKS for Both Microservices using Matrix Strategy
+				  deploy-to-aws-eks:
+					runs-on: ubuntu-latest
+					needs: docker-build-and-push
+
+					strategy:
+					  matrix:
+						service: [service-a, service-b]
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Configure AWS Credentials
+						uses: aws-actions/configure-aws-credentials@v4
+						with:
+						  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+						  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+						  aws-region: ap-south-1
+
+					  - name: Set up kubectl
+						uses: azure/setup-kubectl@v4
+
+					  - name: Update kubeconfig for EKS
+						run: |
+						  aws eks update-kubeconfig \
+							--name hello-cluster \
+							--region ap-south-1
+
+					  - name: Verify Connection to EKS
+						run: |
+						  kubectl get nodes
+						  kubectl get pods --all-namespaces
+
+					  - name: Deploy to AWS EKS
+						run: |
+						  kubectl apply -f AWS/4_goingFullStackDeployingEntireMicroserviceArchitecture_at_aws_k8s/${{ matrix.service }}
+						  
+						  
+		
+		
+		Explanation:
+
+			1. What is Matrix Strategy in GitHub Actions?
+				-->Matrix strategy allows you to run the same job multiple times with different input values, without writing the same job repeatedly.
+				   In your workflow, you use Matrix for two microservices: `service-a` and `service-b`.
+
+				1.1. Build and Test Matrix
+					-->
+						strategy:
+						  matrix:
+							service: [service-a, service-b]
+			
+
+					GitHub Actions automatically creates two job executions:
+					| Execution | `matrix.service` |
+					| --------- | ---------------- |
+					| Job 1     | service-a        |
+					| Job 2     | service-b        |
+
+					Your build command: working-directory: Docker/app2-tax-calculator/${{ matrix.service }}
+					So:
+					- First execution builds Service A.
+					- Second execution builds Service B.
+
+			2. Docker Build Matrix
+               -->
+				Here you define additional properties for each service:
+					matrix:
+					  service:
+						- name: service-a
+						  docker_name: tax-calculator-service-a
+						  path: Docker/app2-tax-calculator/service-a
+
+						- name: service-b
+						  docker_name: tax-calculator-service-b
+						  path: Docker/app2-tax-calculator/service-b
+					
+
+					GitHub automatically creates two executions.
+
+					| Property                     | Service A                | Service B                |
+					| ---------------------------- | ------------------------ | ------------------------ |
+					| `matrix.service.name`        | service-a                | service-b                |
+					| `matrix.service.docker_name` | tax-calculator-service-a | tax-calculator-service-b |
+					| `matrix.service.path`        | `.../service-a`          | `.../service-b`          |
+
+				For example:
+				tags: |
+				  ${{ secrets.DOCKER_USERNAME }}/${{ matrix.service.docker_name }}:latest
+
+				This creates and pushes two separate Docker images.
+
+			3. Deployment Matrix
+					strategy:
+					  matrix:
+						service: [service-a, service-b]
+
+					Again, GitHub creates two executions: kubectl apply -f AWS/4_goingFullStackDeployingEntireMicroserviceArchitecture_at_aws_k8s/${{ matrix.service }}
+			
+
+				- First execution deploys Service A.
+				- Second execution deploys Service B.
+
+			Remember this for your notes:
+
+			> Matrix Strategy = Run the same GitHub Actions job multiple times with different input values.
+			> In our Tax Calculator project, Matrix automates building, testing, Docker image creation, and deployment for Service A and Service B
+			  without duplicating workflow code.
+			  
+			  
+
+2--> Create tax_calculator_frontend_ci_cd.yml workflow for Frontend Application.
+     --> 
+	 
+
+
+				name: Tax Calculator Frontend CI/CD to AWS EKS Cluster
+
+				on:
+				  workflow_dispatch:
+
+				jobs:
+
+				  # 1. Build and Test Frontend Application
+				  build-and-test:
+					runs-on: ubuntu-latest
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Setup Node
+						uses: actions/setup-node@v6
+						with:
+						  node-version: 22
+
+					  - name: Create .env File for Build
+						working-directory: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						run: echo "VITE_API_URL=/api" > .env
+
+					  - name: Install Dependencies
+						working-directory: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						run: npm ci
+
+					  - name: Run Tests
+						working-directory: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						run: npm test --if-present -- --watchAll=false
+
+					  - name: Build Frontend Application
+						working-directory: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						run: npm run build
+
+
+				  # 2. Build and Push Frontend Docker Image
+				  docker-build-and-push:
+					runs-on: ubuntu-latest
+					needs: build-and-test
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Create .env File for Docker Build
+						working-directory: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						run: echo "VITE_API_URL=/api" > .env
+
+					  - name: Log in to Docker Hub
+						uses: docker/login-action@v3
+						with:
+						  username: ${{ secrets.DOCKER_USERNAME }}
+						  password: ${{ secrets.DOCKER_PASSWORD }}
+
+					  - name: Build and Push Docker Image
+						uses: docker/build-push-action@v6
+						with:
+						  context: AWS/3_aws_k8s_Deployment_of_app2-tax-calculator-microservice/tax-calculator-frontend
+						  push: true
+						  tags: |
+							${{ secrets.DOCKER_USERNAME }}/tax-calculator-frontend:latest
+
+
+				  # 3. Deploy Frontend and Ingress to AWS EKS
+				  deploy-to-aws-eks:
+					runs-on: ubuntu-latest
+					needs: docker-build-and-push
+
+					steps:
+					  - name: Checkout Code
+						uses: actions/checkout@v4
+
+					  - name: Configure AWS Credentials
+						uses: aws-actions/configure-aws-credentials@v4
+						with:
+						  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+						  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+						  aws-region: ap-south-1
+
+					  - name: Set up kubectl
+						uses: azure/setup-kubectl@v4
+
+					  - name: Update kubeconfig for EKS
+						run: |
+						  aws eks update-kubeconfig \
+							--name hello-cluster \
+							--region ap-south-1
+
+					  - name: Verify Connection to EKS
+						run: |
+						  kubectl get nodes
+						  kubectl get pods --all-namespaces
+
+					  # Install NGINX Ingress Controller if missing
+					  - name: Install NGINX Ingress Controller
+						run: |
+						  helm version || {
+							echo "Helm is not installed on this runner"
+							exit 1
+						  }
+
+						  helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+						  helm repo update
+
+						  helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+							--namespace ingress-nginx \
+							--create-namespace \
+							--set controller.service.type=LoadBalancer
+
+					  - name: Wait for Ingress Controller
+						run: |
+						  kubectl rollout status deployment/ingress-nginx-controller \
+							-n ingress-nginx --timeout=300s
+
+						  kubectl get svc -n ingress-nginx
+
+					  - name: Deploy Frontend and Ingress
+						run: |
+						  kubectl apply -f AWS/4_goingFullStackDeployingEntireMicroserviceArchitecture_at_aws_k8s/frontend
+						  kubectl apply -f CICD/2_CICD_for_microservice_app2-tax-calculator/ingress.yaml
+
+					  - name: Verify Frontend Deployment
+						run: |
+						  kubectl rollout status deployment/frontend --timeout=180s
+						  kubectl get pods
+						  kubectl get ingress
+						  
+						  
+	
+	Explanation: About NGINX controller install step
+			1.NGINX Ingress Controller Installation in CI/CD
+            
+				- NGINX Ingress Controller is installed inside the AWS EKS cluster using Helm.
+				- It is required to install it only once for the cluster.
+				- We can include the Helm installation command in the GitHub Actions YAML workflow.
+
+			Helm command:
+				```bash
+				helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+				  --namespace ingress-nginx \
+				  --create-namespace \
+				  --set controller.service.type=LoadBalancer
+				```
+
+			How it works:
+				- First workflow run: Installs the NGINX Ingress Controller if it doesn't exist.
+				- Subsequent runs: Reuses or upgrades the existing installation.
+				- `helm upgrade --install` is idempotent, so we don't need separate workflows for first-time and subsequent deployments.
+
+		Note: The Ingress Controller keeps running inside EKS even after the GitHub Actions workflow finishes.
+				We only need to deploy or update our application during subsequent CI/CD runs.
+
+
+    WE HAVE CHANGED OUR INGRESS.yml AS WELL:
+	
+				apiVersion: networking.k8s.io/v1
+				kind: Ingress
+				metadata:
+				  name: tax-app-ingress
+				  annotations:
+					nginx.ingress.kubernetes.io/use-regex: "true"
+					nginx.ingress.kubernetes.io/rewrite-target: /$1
+				spec:
+				  ingressClassName: nginx
+				  rules:
+					- http:
+						paths:
+						  - path: /api/(.*)
+							pathType: ImplementationSpecific
+							backend:
+							  service:
+								name: service-a
+								port:
+								  number: 80
+
+						  - path: /(.*)
+							pathType: ImplementationSpecific
+							backend:
+							  service:
+								name: frontend
+								port:
+								  number: 80
+								  
+	WHY??:
+			Because of this error-	Kubernetes Ingress – Regex Path Validation Error
+			Link- https://github.com/MishalPandey/Full-Stack-DevOps-Practise/actions/runs/41308497732/job/124854684180
+
+				Problem: While running `kubectl apply -f ingress.yaml`, 
+					Kubernetes returned:
+						Warning: path cannot be used with pathType Prefix
+						Error: admission webhook denied the request
+
+				Reason:
+					- Kubernetes `pathType: Prefix` supports normal URL prefix matching.
+					- It does not support regex patterns like `/api/(.*)` or `/(.*)`.
+					- NGINX Ingress supports regex routing using `use-regex: "true"`.
+
+				Solution:
+					Use `pathType: ImplementationSpecific` instead of `Prefix` for regex paths.
+
+				Correct Configuration:
+						
+						annotations:
+						  nginx.ingress.kubernetes.io/use-regex: "true"
+						  nginx.ingress.kubernetes.io/rewrite-target: /$1
+
+						paths:
+						  - path: /api/(.*)
+							pathType: ImplementationSpecific
+							backend:
+							  service:
+								name: service-a
+								port:
+								  number: 80
+
+						  - path: /(.*)
+							pathType: ImplementationSpecific
+							backend:
+							  service:
+								name: frontend
+								port:
+								  number: 80
+						
+
+					How URL Rewriting Works:
+
+					| Incoming URL  | Backend receives |
+					| ------------- | ---------------- |
+					| `/api/users`  | `/users`         |
+					| `/api/orders` | `/orders`        |
+					| `/dashboard`  | `/dashboard`     |
+					| `/`           | `/`              |
+
+				Important Annotations:
+					- `use-regex: "true"` → Enables regex matching in NGINX.
+					- `rewrite-target: /$1` → Rewrites the URL using the first captured regex group.
+					- `ImplementationSpecific` → Allows the Ingress Controller to interpret regex paths.
+
+				
+
+		IMPORTANT THING HERE: Whenever you use regex paths in NGINX Ingress, use `pathType: ImplementationSpecific`, not `Prefix`.
+		-->
+			`Prefix` = Normal URL prefix matching.
+			`ImplementationSpecific` = Controller-specific path matching, including NGINX regex routing.
+			
+			
+			
+
+3--> RUN in powershell.
+     -->
+		run: kubectl get svc
+			NAME         TYPE           CLUSTER-IP       EXTERNAL-IP                                                                PORT(S)        AGE
+			frontend     LoadBalancer   10.100.179.55    aa60d1694e0134d6ba3d943e186de4a3-1685207513.ap-south-1.elb.amazonaws.com   80:30963/TCP   113m
+			kubernetes   ClusterIP      10.100.0.1       <none>                                                                     443/TCP        4h37m
+			service-a    LoadBalancer   10.100.132.128   a974156e8c913407f9b5571730697e41-1366815665.ap-south-1.elb.amazonaws.com   80:30272/TCP   156m
+			service-b    ClusterIP      10.100.219.208   <none>                                                                     4000/TCP       156m
+		run: kubectl get ingress
+			NAME              CLASS   HOSTS   ADDRESS                                                                    PORTS   AGE
+			tax-app-ingress   nginx   *       a7ab5bf131fa542ad889303d1d398d17-1393477074.ap-south-1.elb.amazonaws.com   80      113m
+					
+   
+    Use this link- http://a7ab5bf131fa542ad889303d1d398d17-1393477074.ap-south-1.elb.amazonaws.com/
+	Here we will get the Tax Caclulator App.

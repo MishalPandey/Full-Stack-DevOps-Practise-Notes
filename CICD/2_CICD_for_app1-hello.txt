@@ -199,4 +199,4 @@ CD Part Here Continuous Deployment. -->>
 
 
 
-IMPLEMETED CICD in Hello Spring Application-------------->>>>>>>>>>>>>
+IMPLEMENTED CICD in Hello Spring Application-------------->>>>>>>>>>>>>
