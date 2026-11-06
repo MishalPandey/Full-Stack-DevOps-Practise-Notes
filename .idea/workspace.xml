@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d181e054-5e38-4be3-8584-3026301db680" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/CICD/3_CICD_for_app2-tax-calculator-Microservice.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/IaC/1_Terraform/1_Terraform.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CI-CD/1_CI_CD.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CICD/1_CI_for_app1-hello.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CI-CD/2_CI_CD.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CICD/2_CICD_for_app1-hello.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

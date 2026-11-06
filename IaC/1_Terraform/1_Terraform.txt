@@ -1,0 +1,171 @@
+1--> Install Terraform
+     --> run: choco install teraform
+	 
+	
+2--> Terraform Block ?
+     -->
+		The terraform block defines Terraform's configuration and requirements.
+		It tells Terraform:
+			1. Required providers: Which providers are needed and where to download them from (e.g., AWS provider from HashiCorp Registry).
+			2. Terraform version: Which Terraform CLI version is required.
+
+		Example:
+			terraform {
+			  required_version = ">= 1.5.0"
+
+			  required_providers {
+				aws = {
+				  source  = "hashicorp/aws"
+				  version = "~> 5.0"
+				}
+			  }
+			}
+		
+		Remember:
+			- `required_version` → Specifies the required Terraform version.
+			- `required_providers` → Specifies the required providers.
+			- `source` → Specifies where the provider comes from.
+			- `version` → Specifies the provider version.
+			
+
+3--> AWS Provider in Terraform ?
+     --> 
+
+		3.1--> What is a Provider?
+			- A Provider is a plugin that acts as a bridge between Terraform and cloud platforms like AWS, Azure, and GCP.
+			- Terraform uses providers to communicate with cloud APIs and manage infrastructure.
+
+		3.2--> How Does AWS Provider Work?
+			- Terraform itself cannot directly create AWS resources.
+			- AWS Provider communicates with AWS APIs on Terraform's behalf.
+			- It converts Terraform resource configurations into API requests.
+			- AWS processes these requests and creates, updates, or deletes resources.
+
+		3.3--> AWS Provider Configuration
+			
+			provider "aws" {
+			  region = "ap-south-1"
+			}
+
+			- `aws` → Specifies the AWS provider.
+			- `region` → Specifies the AWS region where resources will be created.
+
+		3.4--> How Does Authentication Work?
+			Terraform needs AWS credentials to authenticate with AWS.
+
+			Common authentication methods:
+			- AWS CLI credentials (`aws configure`).
+			- Environment variables.
+			- IAM roles (e.g., EC2 instance role or GitHub Actions OIDC role).
+
+        3.5--> Resource Creation Block
+			The resource block is used to create and manage infrastructure resources in AWS.
+
+			Example: Create an EC2 instance
+				resource "aws_instance" "demo_ec2" {
+				  ami           = "ami-0f19324397f53458f"
+				  instance_type = "t3.micro"
+
+				  tags = {
+					Name = "terraform-demo"
+				  }
+				}
+
+			Understanding the resource block:
+				resource → Defines the resource to create.
+				aws_instance → AWS resource type (EC2 instance).
+				demo_ec2 → Local name used by Terraform to identify this resource.
+				ami → Amazon Machine Image used to launch the EC2 instance.
+				instance_type → Specifies the EC2 instance size.
+				tags → Adds metadata to the AWS resource.
+				Name = "terraform-demo" → Name displayed for the EC2 instance in the AWS Console.
+
+			Important difference:
+				demo_ec2 → Terraform's internal resource name.
+				terraform-demo → EC2 Name tag visible in the AWS Dashboard.
+			
+		3.6--> Communication Flow
+
+			Terraform Configuration (.tf)
+					↓
+			AWS Provider Plugin
+					↓
+			AWS APIs (Authenticated Requests)
+					↓
+			AWS Infrastructure (EC2, S3, EKS, VPC, RDS)
+
+		3.7--> Terraform Execution Commands
+
+			terraform init      # Downloads required provider plugins
+			terraform plan      # Previews infrastructure changes
+			terraform apply     # Applies changes through the provider
+			terraform destroy   # Destroys managed infrastructure
+
+		3.8--> Difference Between Components
+
+			| Component | Responsibility |
+			|---        |---             |
+			| Terraform | Manages infrastructure |
+			| AWS Provider | Communicates with AWS APIs |
+			| AWS API | Processes requests from Terraform |
+			| AWS Credentials | Provides authentication |
+
+	Remember: AWS Provider is a plugin that acts as a bridge between Terraform and AWS APIs. 
+	          It uses AWS credentials to authenticate requests and manage AWS resources.
+			  
+			  
+
+4--> Create main.tf file 
+     -->
+
+				# Terraform block
+				#   This block tells Terraform:
+				#     1. Which providers are required
+				#     2. Where to download them from
+				#     3. The version of Terraform to use
+				# https://registry.terraform.io/providers/hashicorp/aws/latest
+
+				terraform {
+				  required_providers {
+					aws = {
+					  source  = "hashicorp/aws"
+					  version = "6.72.0"
+					}
+				  }
+				}
+
+				# Provider configuration
+				# This tells Terraform:
+				#   -Which cloud to talk to (AWS)
+				#   -Which region to create resource in
+				provider "aws" {
+				  region = "ap-south-1"
+				}
+
+
+				# Resource block (EC2 instance)
+				# This block tells Terraform:
+				#   1. What resource to create (EC2 instance)
+				#   2. The configuration of the resource (AMI, instance type, tags)
+				resource "aws_instance" "demo_ec2" {
+				  ami           = "ami-0f19324397f53458f"
+				  instance_type = "t3.micro"
+
+				  tags = {
+					Name = "terraform-demo"
+				  }
+				}
+				# demo_ec2 is name inside terraform
+				# terraform-demo is name on AWS dashboard for this EC2 instance
+				
+
+5--> run these command:
+     --> run:
+			terraform init      
+			terraform plan 
+			terraform validate		
+			terraform apply     
+			terraform destroy   
+			
+	 --> output: EC2 instance named terraform-demo will be created and it will be get deleted you can see.
+	 
