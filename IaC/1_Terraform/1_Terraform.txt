@@ -169,3 +169,15 @@
 			
 	 --> output: EC2 instance named terraform-demo will be created and it will be get deleted you can see.
 	 
+	 
+	 
+
+
+6--> Talking to AWS For Creating Resources in PDF NOTES 
+	 --> Check how terraform never ask for credentials and get authenticated and created resources, hamare aws CLI already login tha
+	     toh esne woh logined CLI at  
+		 
+		 The default location is “~/.aws/credentials” on Linux/macOS, or “%USERPROFILE%\.aws\credentials” on Windows
+		 
+		 tha toh waha se usne authenticate karliya apaneaap aur resources create kardiye. 
+	 

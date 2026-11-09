@@ -1,0 +1,154 @@
+REMOTE STATE MANAGEMENT------->>>>>>>
+
+1--> Remote State Management in Terraform
+     --> 
+		Remote State Management means instead of storing the Terraform state file (`terraform.tfstate`) on your local machine, 
+		we store it in a remote location (e.g. AWS S3 Bucket).
+
+		1. Why do we need Remote State?
+
+			Suppose two developers (Developer A and Developer B) are working on the same Terraform project.
+
+			Without Remote State:
+
+			- Developer A has their own local `terraform.tfstate`.
+			- Developer B has their own local `terraform.tfstate`.
+			- Both state files can become different.
+			- This can cause conflicts and inconsistent infrastructure management.
+
+			With Remote State:
+
+			Both developers use the same remote state file stored in an S3 bucket.
+
+			[Terraform Remote State Storage with AWS S3 & DynamoDB - TerraformGuru](https://images.openai.com/static-rsc-4/vUAjN1ipYUFqIavSL8aZmYXR7GBxHcjGwPMGN8aS0lFd-HyKcDE1SYQtItNglROBMeD07_WaT5sL9X3dacMEYk6-uU5exLJpKLuhucXbOWOkwN7dmdthF6OwRSDqUnMIO73LyLQukv7YamVimJLu5zGYTMXojtihLdEEoxfnbdc?purpose=inline)
+
+			[terraformguru.com](https://terraformguru.com/terraform-real-world-on-aws-ec2/20-Remote-State-Storage-with-AWS-S3-and-DynamoDB/?utm_source=chatgpt.com)
+
+			
+				   Developer A                 Developer B
+						|                           |
+						|                           |
+						v                           v
+				   Terraform CLI               Terraform CLI
+						|                           |
+						+-------------+-------------+
+									  |
+									  v
+							   AWS S3 Bucket
+							  (Remote State)
+									  |
+									  v
+							  terraform.tfstate
+			
+
+			Both developers work with the same centralized state instead of maintaining separate local state files.
+
+		
+		
+		
+		2. Why do we need State Locking?
+			Suppose:
+				- Developer A starts executing `terraform apply`.
+				- At the same time, Developer B also tries to execute `terraform apply`.
+				- Both are trying to modify the same infrastructure state.
+
+				This can cause state conflicts or corruption.
+				Solution: State Locking
+				State locking ensures that only one Terraform operation can modify the state at a time.
+
+				
+				Developer A ---> Requests Lock ---> Lock Acquired
+													  |
+												 Makes Changes
+													  |
+												  Lock Released
+													  |
+				Developer B ---> Gets Lock ---> Makes Changes
+				
+				If Developer A has acquired the lock, Developer B must wait until the lock is released.
+
+		
+		
+		
+		3. AWS Services Required
+
+		| AWS Service | Purpose                                     |
+		| ----------- | ------------------------------------------- |
+		| S3 Bucket   | Stores the remote Terraform state file.     |
+		| DynamoDB    | Traditionally used to manage state locking. |
+
+		Important: DynamoDB-based locking is the older approach. Current Terraform S3 backends support native S3 lockfiles using `use_lockfile = true`.
+				    DynamoDB-based locking is deprecated.
+
+		
+		
+		4. Backend Configuration
+			Inside your Terraform configuration, create a `backend.tf` file:
+
+			Using S3 native locking:
+				terraform {
+				  backend "s3" {
+					bucket       = "terraform-state-bucket-770386273"
+					key          = "dev/terraform.tfstate"
+					region       = "ap-south-1"
+					use_lockfile = true
+				  }
+				}
+		
+
+			Here:
+				- `bucket` → S3 bucket where the state file is stored.
+				- `key` → Path/name of the state file inside S3.
+				- `region` → AWS region.
+				- `use_lockfile = true` → Enables state locking using an S3 lockfile.
+
+		5. Important Commands
+
+			terraform init
+				Initializes the S3 backend and migrates existing local state when prompted.
+
+			terraform plan
+				Checks the infrastructure changes.
+
+			terraform apply
+				Applies changes while acquiring the state lock when required.
+
+		###Summary
+			1. Remote State Management stores Terraform state in a centralized remote location instead of locally.
+			2. AWS S3 is commonly used to store `terraform.tfstate`.
+			3. Multiple developers can access the same remote state.
+			4. State Locking prevents multiple Terraform operations from modifying the same state simultaneously.
+			5. Traditionally, DynamoDB was used for state locking with S3.
+			6. Now, S3 native locking (`use_lockfile = true`) is supported and recommended.
+			7. Remote state files should be protected because they can contain sensitive information.
+
+		Remember:
+			- S3 = Where Terraform state is stored.
+			- State Locking = Prevents simultaneous state modifications.
+			- DynamoDB = Traditional locking mechanism.
+			- S3 Lockfile = Modern locking mechanism.
+			
+			
+			
+			
+2--> Created bootstrap Directory for All the Configuration to manage state files. 
+	 --> S3 Bucket for File Storage + DynamoDB for Locking.
+	 
+3--> Changed provider.tf file inside dev-> Directory so that it can point out to Remote state files.
+     --> Added
+					  backend "s3" {
+						bucket = "terraform-state-bucket-770386273"
+						key    = "dev/terraform.tfstate"
+						region = "ap-south-1"
+						dynamodb_table = "terraform-state-lock"
+						encrypt = true
+					  }
+					  
+4--> go to the bootstrap Directory first and 
+     run: terraform init and terraform apply --auto-approve
+	 
+	 then go to main Directory -> dev folder
+	 run: terraform init and terraform apply --auto-approve
+	 
+	 You can see ki Dev me .tfstate files nhi create huyi check s3 bucket waha stored huyi hai. and check DynamoDB table as well.
+							

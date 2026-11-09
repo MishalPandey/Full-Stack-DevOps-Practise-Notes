@@ -1,0 +1,335 @@
+Terraform States ----->>>>>>>
+
+1--> What is Terraform state?
+	 --> 
+		Terraform State is a file that stores the information about all the infrastructure resources Terraform has created and manages.
+		By default, Terraform stores this information in a file called `terraform.tfstate`.
+
+		Why do we need Terraform State?
+			Suppose you write Terraform code to create an EC2 instance.
+				1. Terraform creates an EC2 instance on AWS.
+				2. Terraform stores its details (Instance ID, AMI, IP, etc.) in `terraform.tfstate`.
+				3. Next time you run `terraform apply`, Terraform checks the state file.
+				4. It compares:
+				   - Your Terraform configuration (`.tf` files).
+				   - Current Terraform state (`terraform.tfstate`).
+				5. Based on the differences, Terraform decides what needs to be created, updated, or deleted.
+
+			Example:
+				Suppose your Terraform code contains:
+					resource "aws_instance" "demo" {
+					  ami           = "ami-123456"
+					  instance_type = "t2.micro"
+					}
+
+			After creating the EC2 instance, Terraform state stores information similar to:
+				Resource: aws_instance.demo
+				
+				Instance ID: i-0123456789
+				AMI: ami-123456
+				Instance Type: t2.micro
+				Public IP: 13.233.xx.xx
+			
+
+		Important points:
+			- `terraform.tfstate` is the default state file.
+			- It maintains a record of infrastructure managed by Terraform.
+			- Terraform uses state to track resources and their actual infrastructure IDs.
+			- It helps Terraform identify changes before creating, updating, or deleting resources.
+			- State can be stored locally or remotely (AWS S3, Terraform Cloud, etc.).
+			- Never manually modify the state file.
+			- State files may contain sensitive information, so protect them.
+
+		Remember:
+			- `.tf files` = What infrastructure we want.
+			- `terraform.tfstate` = What infrastructure Terraform knows it manages.
+			- `terraform plan` = Compares desired configuration with known state and refreshes infrastructure information to determine required changes.
+			
+			
+2--> `terraform.tfstate` vs `terraform.tfstate.backup`
+	 -->
+
+		1. terraform.tfstate
+			- It is the current Terraform state file.
+			- Stores information about infrastructure managed by Terraform.
+			- Terraform uses it to track resources and their attributes.
+
+		2. terraform.tfstate.backup
+			- It is a backup of the previous state file.
+			- Terraform automatically creates it when updating the existing local state file.
+			- It helps recover the previous state if something goes wrong.
+
+		Example:
+			Suppose initially you created one EC2 instance.
+
+			First state:
+				```
+				terraform.tfstate
+				  EC2 instance: i-123
+				```
+				
+			Now you modify Terraform code and create another EC2 instance.
+			After applying changes:
+
+				```
+				terraform.tfstate
+				  EC2 instance: i-123
+				  EC2 instance: i-456
+
+				terraform.tfstate.backup
+				  EC2 instance: i-123
+				```
+				
+3--> Check this Documentation.
+	 --> https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+	 
+
+4--> Create IAM User using Terraform
+	 -->  
+		
+		# Create an IAM USER
+
+		resource "aws_iam_user" "demo_user" {
+		  name = "terraform-demo-user"
+
+		  tags = {
+			purpose = "terraform-demo"
+		  }
+		}
+
+5--> Create S3 Bucket using Terraform
+     -->
+		# Create a S3 Bucket
+		
+		resource "aws_s3_bucket" "demo_bucket" {
+		  bucket = "my-tf-test-bucket-77038784"
+
+		  tags = {
+			Name        = "terraform-demo"
+			Environment = "demo"
+		  }
+		}
+		
+	  --> For enabling Versioning in S3 bucket Check the same Documentation and Enable it for practise.
+			# Enable versioning in S3 bucket
+			# aur yaha uper wale naam demo_bucket ko use kar rhe kyuki terraform usko ussi naam se jaanta aur aws me my-tf-test-bucket-7703878 naam se create hua hoga.
+			
+			resource "aws_s3_bucket_versioning" "demo_bucket_versioning" {
+			  bucket = aws_s3_bucket.demo_bucket.id
+			  versioning_configuration {
+				status = "Enabled"
+			  }
+			}
+			
+
+6--> We can use 
+		terraform apply -auto-approve
+		in place of
+		terraform apply
+
+7--> What is terraform validate command?
+     -->`terraform validate` command checks whether your Terraform configuration files (`.tf`) have correct syntax and valid configuration structure.
+
+		It checks:
+			- Syntax errors.
+			- Missing required arguments.
+			- Invalid resource configurations.
+			- Incorrect block structures.
+
+		Command:	terraform validate
+		Successful output:	Success! The configuration is valid.
+		
+		Important:
+			- It does not create any AWS resources.
+			- It does not check whether AWS resources can actually be created.
+			- Run `terraform init` before running `terraform validate`.
+
+		Remember:
+			- `terraform init` → Initializes Terraform.
+			- `terraform validate` → Checks Terraform code.
+			- `terraform plan` → Shows what changes Terraform will make.
+			- `terraform apply` → Creates or updates infrastructure.
+			
+8--> What is terraform fmt command?
+     -->
+		`terraform fmt` command automatically formats Terraform configuration files (`.tf`) into a standard, readable format.
+
+		It fixes:
+			- Incorrect indentation.
+			- Spacing and alignment.
+			- Formatting inconsistencies.
+			- Code readability.
+
+		Command:	terraform fmt
+		
+		Example: Before formatting
+
+			resource "aws_instance" "demo" {
+			ami="ami-123456"
+			instance_type="t2.micro"
+			}
+		
+		After formatting
+
+			resource "aws_instance" "demo" {
+			  ami           = "ami-123456"
+			  instance_type = "t2.micro"
+			}
+
+		Important commands:
+			terraform fmt              # Formats files in current directory
+			terraform fmt -recursive   # Formats files in subdirectories too
+			terraform fmt -check       # Checks formatting without modifying files
+		
+		
+
+9--> varibale in Terraform?
+     --> 			
+			# Variables in Terraform
+			variable "instance_type" {
+			  type = string
+			  description = "EC2 instance type"
+			}
+
+			# create an EC2 instance with using variable
+			resource "aws_instance" "demo_ec2" {
+			  ami           = "ami-0f19324397f53458f"
+			  # instance_type = "t3.micro"
+			  instance_type = var.instance_type
+
+			  tags = {
+				Name = "terraform-demo"
+			  }
+			}
+			
+			--> run time pe jab terraform plan run karenge toh woh instance_type varibale ki value mangegaa with description.
+			    jo ki hum t3.small put kar sakte.
+				
+				
+				
+			# Variables in Terraform with as well its default value
+			variable "instance_type" {
+			  type = string
+			  description = "EC2 instance type"
+			  default = "t3.micro"
+			#   default value dena ke ke baad terraform plan me puchhta nhi instance type varibale ki value yeh
+			}
+
+			# create an EC2 instance with using variable
+			resource "aws_instance" "demo_ec2" {
+			  ami           = "ami-0f19324397f53458f"
+			  # instance_type = "t3.micro"
+			  instance_type = var.instance_type
+
+			  tags = {
+				Name = "terraform-demo"
+			  }
+			}
+			
+			--> ab run time pe jab terraform plan run karenge toh woh instance_type varibale ki value nhi mangegaa aur default value use karlega
+				toh run time pe do
+					terraform apply  -var="instance_type=t3.small"
+				it will overwrite default value to t3.small
+				
+				
+			
+			# multiple variables in Terraform with as well its default value
+			variable "instance_type" {
+			  type = string
+			  description = "EC2 instance type"
+			  default = "t3.micro"
+			}
+
+			variable "enable_monitoring" {
+			  type = bool
+			  description = "EC2 instance monitoring"
+			  default = false
+
+			}
+			
+			variable "instance_name" {
+			  type = string
+			  description = "EC2 instance name"
+			  default = "mishal-instance"
+
+			}
+
+
+			# create an EC2 instance with using variable
+			resource "aws_instance" "demo_ec2" {
+			  ami           = "ami-0f19324397f53458f"
+			  # instance_type = "t3.micro"
+			  instance_type = var.instance_type
+			  monitoring = var.enable_monitoring
+
+			  tags = {
+				Name = var.instance_name
+			  }
+			}
+			
+			-->toh run time pe do
+					terraform apply  -var="instance_type=t3.small" -var="enable_monitoring=true" -var="instance_name=custom-name"
+				it will overwrite default values
+
+
+
+
+10--> what is terraform.tfvars?
+      --> create terraform.tfvars and fill these variable
+			instance_type = "t3.small"
+			enable_monitoring = true
+			instance_name = "tfvars-name"
+			
+	  --> Now, if we will do terraform apply it will not take default values it will take the values from .tfvars file
+	  
+	  --> Suppose 2 or 3 .tfvars files hai like dev.tfvars, prod.tfvars file then agar prod ke liye run karni then hume
+	      run: terraform apply -var-file="prod.tfvars"
+	  
+	  --> aur yaad rakhne terraform.tfvars file name hai tab hi hum directly terraform apply  command chala ke woh terraform.tfvars file ki value lelega
+	      agar kuch aur naam rakha hai humne toh explictly mention karna padega terraform apply -var-file="dev.tfvars" aise.
+
+		
+		
+11--> Different ways of Passing Variable Values in Terraform and precedence order taken by terraform
+      --> run: $env:TF_VAR_instance_type= "t2.nano"
+	  --> run: terraform apply 
+	      it will pick instance_type = "t2.nano" not from terraform.tfvars file.
+		  
+		  
+12--> terraform precedence for taking variable values.
+		
+		1st -> terraform apply  -var="instance_type=t3.small" -var="enable_monitoring=true" -var="instance_name=custom-name"
+		2nd -> terraform apply -var-file="prod.tfvars"
+		3rd -> default values by terraform apply
+		
+		
+
+13--> Output in Terraform? 
+	  --> 
+		### Terraform Output
+		1. Without `sensitive = true`
+
+				output "ec2_public_ip" {
+				  description = "Public IP of the EC2 instance"
+				  value       = aws_instance.demo_ec2.public_ip
+				}
+			- After `terraform apply`, Terraform displays the output value (EC2 Public IP) in the terminal.
+			- The description helps explain what the output represents.
+
+		2. With `sensitive = true`
+
+				output "ec2_public_ip" {
+				  description = "Public IP of the EC2 instance"
+				  value       = aws_instance.demo_ec2.public_ip
+				  sensitive   = true
+				}
+			- After `terraform apply`, Terraform hides the actual output value in the terminal and displays `(sensitive value)` instead.
+			- The output is still stored in the Terraform state file.
+			- You can retrieve it using `terraform output -raw ec2_public_ip`, which will reveal the actual value.
+
+		Remember:
+			- `sensitive = true` hides output values from normal terminal display.
+			- It does NOT encrypt or remove the value from the state file.
+			- The description is still available; only the sensitive value is masked.
+			
+		

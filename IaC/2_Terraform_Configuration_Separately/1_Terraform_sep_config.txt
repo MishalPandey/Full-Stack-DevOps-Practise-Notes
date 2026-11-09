@@ -1,0 +1,44 @@
+1--> Created Seperated files 
+     --> main.tf
+	     output.tf
+		 variable.tf
+		 terraform.tfvars
+		 
+		 -->
+			 toh kya ye koi structure hai nhi matlb tum kuch bhi naam rakho koi matlb nhi in teeno file ka
+			 terraform kya karta woh sari .tf file ikhhata karke read karta so usko matlb nhi 
+
+		### Example
+			Tum ye structure rakh sakte ho:
+				terraform-project/
+				│
+				├── main.tf
+				├── variable.tf
+				├── output.tf
+				└── terraform.tfvars
+
+			Ya phir:
+				terraform-project/
+				│
+				├── mishal.tf
+				├── inputsofmishal.tf
+				├── mishalresults.tf
+				└── terraform.tfvars
+
+			Dono perfectly valid hain.
+
+		### Toh phir separate files kyun banate hain?
+			Ye sirf code ko organized aur maintainable rakhne ke liye hota hai.
+				- `main.tf` → Resources create karne ka code.
+				- `variables.tf` → Input variables declare karne ka code.
+				- `terraform.tfvars` → Variables ki actual values.
+				- `outputs.tf` → Output values define karne ka code.
+
+		### Important points
+			1. Terraform ko `.tf` files ke naam se koi specific difference nahi padta.
+			2. Terraform current directory ki saari `.tf` files ko combine karke ek configuration ki tarah read karta hai.
+			3. Files ko logically separate karna coding practice hai, Terraform ki requirement nahi.
+			4. `terraform.tfvars` ka naam special hai. Terraform ise automatically variable values load karne ke liye recognize karta hai.
+
+		Remember: File names are for developer convenience;
+				  Terraform configuration blocks determine the actual functionality.

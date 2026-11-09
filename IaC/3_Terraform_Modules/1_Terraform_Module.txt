@@ -1,0 +1,118 @@
+1--> Terraform Module (CHECK YOUR IAC-> Terraform003 directory in DevOps Practise Folder)
+     -->
+		A Terraform Module is a collection of Terraform configuration files (`.tf`) grouped together to create and 
+		manage a particular set of infrastructure resources.
+		In simple words, Module = Reusable Terraform Code.
+
+		why do we need Modules?
+			Suppose you have to create EC2 instances for 3 different environments:
+			- Development
+			- Testing
+			- Production
+
+			Instead of writing the same EC2 creation code 3 times, you create one EC2 module and reuse it wherever required.
+			Example: Without Module
+				project/
+				│
+				├── dev-ec2.tf
+				├── test-ec2.tf
+				└── prod-ec2.tf
+			You might end up repeating the same resource configuration.
+
+			Example: With Module
+			Folder structure:
+				CHECK YOUR IAC-> Terraform003 directory.
+
+			Here, we are using the same module thrice with different configurations.
+
+		
+		
+		Types of Terraform Modules
+			1. Root Module: The main working directory from which you execute Terraform commands.
+			2. Child Module: A module called or reused by another module.
+
+		
+		Important Points:
+			- Module = Reusable collection of Terraform configuration files.
+			- Helps avoid code duplication.
+			- Makes infrastructure code reusable and maintainable.
+			- Modules can accept input variables and return output values.
+			- A module can contain multiple resources.
+			- Modules can be created locally or downloaded from external sources like Terraform Registry.
+
+		Remember:
+			Root Module → Calls Child Modules → Child Modules create/manage resources.
+			Terraform Module is similar to a reusable function in programming: write the logic once and use it multiple times.
+			
+			
+2--> Terraform `count` – Conditional Resource Creation (If-Else)
+	 --> 
+		Terraform uses the ternary operator (`? :`) with `count` to conditionally create resources.
+		
+		Check This Block:
+				# Enable versioning in S3 bucket
+				resource "aws_s3_bucket_versioning" "demo_bucket_versioning" {
+				  count = var.enable_versioning ? 1 : 0
+				  bucket = aws_s3_bucket.demo_bucket.id
+				  versioning_configuration {
+					status = "Enabled"
+				  }
+				}
+
+
+			Syntax:	
+				count = condition ? 1 : 0'
+			Think of it like an IF-ELSE statement in Java.
+			Java equivalent:
+				if (enable_versioning == true) {
+					// Create resource
+				} else {
+					// Don't create resource
+				}
+			Terraform: count = var.enable_versioning ? 1 : 0
+		
+		How does Terraform work internally?
+			Case 1: `enable_versioning = true`
+				count = true ? 1 : 0
+					- Condition is TRUE.
+					- `count` becomes `1`.
+					- Terraform creates one instance of the resource.
+
+			Case 2: `enable_versioning = false`
+				count = false ? 1 : 0
+					- Condition is FALSE.
+					- `count` becomes `0`.
+					- Terraform creates zero instances of the resource.
+
+		### General Syntax
+			```
+			count = condition ? 1 : 0
+			```
+
+			| Condition | Count | Result                |
+			| --------- | ----- | --------------------- |
+			| `true`    | 1     | Create resource       |
+			| `false`   | 0     | Don't create resource |
+
+		### Important: `count` can also create multiple resources
+			```
+			resource "aws_instance" "demo" {
+			  count         = 3
+			  ami           = "ami-123456"
+			  instance_type = "t2.micro"
+			}
+			```
+
+			Here, Terraform creates 3 EC2 instances:
+
+			```
+			aws_instance.demo[0]
+			aws_instance.demo[1]
+			aws_instance.demo[2]
+			```
+
+		Remember:
+			- `count = 0` → No resource.
+			- `count = 1` → One resource.
+			- `count = 3` → Three resources.
+			- `condition ? 1 : 0` → Conditional resource creation (If-Else).
